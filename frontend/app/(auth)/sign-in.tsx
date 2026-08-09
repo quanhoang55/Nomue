@@ -1,11 +1,32 @@
-import { Text, View } from "react-native";
-import {Link} from "expo-router";
+import { Text, View, Button } from "react-native";
+import { router } from "expo-router";
 
-export default function SignIn(){
+export default function SignIn() {
+  // ===========================================================
+  // Sign In Handler
+  // ===========================================================
+  async function handleSignIn() {
+    try {
+      if (!__DEV__) {
+        await SignIn();
+      }
+      router.replace("/(tabs)");
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  // ===========================================================
+  // Main
+  // ===========================================================
   return (
-    <View>
-      <Text className="--color-foreground text-xl font-bold">Sign In</Text>
-      <Link href="/(auth)/sign-up">Create Account</Link>
+    <View className="flex-1 items-center justify-center">
+      <Text className="text-5xl font-sans-spec36 color-foreground">
+        Welcome Back To
+      </Text>
+      <Text className="text-8xl font-sans-spec36 color-foreground">NOMUE</Text>
+      <Button title="Sign in" onPress={handleSignIn} />
+      <Button title="Sign Up" onPress={() => router.push("/(auth)/sign-up")} />
     </View>
-  )
+  );
 }

@@ -1,7 +1,10 @@
 import "@/global.css";
-import { Tabs, Stack } from "expo-router";
+import { Tabs } from "expo-router";
 
 export default function RootLayout() {
+  // ===========================================================
+  // Main
+  // ===========================================================
   return (
     <Tabs screenOptions={{ headerShown: false }}>
       <Tabs.Screen

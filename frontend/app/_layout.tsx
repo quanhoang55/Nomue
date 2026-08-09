@@ -5,6 +5,9 @@ import { useEffect } from "react";
 import { hide, hideAsync } from "expo-router/build/utils/splash";
 
 export default function RootLayout() {
+  // ===========================================================
+  // Font
+  // ===========================================================
   const [fontsLoaded] = useFonts({
     "normal-font": require("../assets/fonts/josefin/JosefinSans-Regular.ttf"),
     "normal-italic": require("../assets/fonts/josefin/JosefinSans-Italic.ttf"),
@@ -23,5 +26,22 @@ export default function RootLayout() {
 
   if (!fontsLoaded) return null;
 
-  return <Stack screenOptions={{ headerShown: false }} />;
+  // ===========================================================
+  // Dev Mode
+  // ===========================================================
+  const devmode = __DEV__;
+
+  // ===========================================================
+  // Main
+  // ===========================================================
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Protected guard={!devmode}>
+        <Stack.Screen name="(auth)" />
+      </Stack.Protected>
+      <Stack.Protected guard={devmode}>
+        <Stack.Screen name="(tabs)" />
+      </Stack.Protected>
+    </Stack>
+  );
 }
