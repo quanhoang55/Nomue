@@ -1,8 +1,43 @@
-import { SplashScreen, Stack } from "expo-router";
 import "@/global.css";
-import { useFonts } from "expo-font";
 import { useEffect } from "react";
-import { hide, hideAsync } from "expo-router/build/utils/splash";
+import { useFonts } from "expo-font";
+import { Stack } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+import { AuthProvider, useAuth } from "@/providers/AuthProvider";
+
+SplashScreen.preventAutoHideAsync();
+
+function RootNavigator() {
+  // ===========================================================
+  // Sign In / Sign Up
+  // ===========================================================
+  const { isLogIn } = useAuth();
+
+  // ===========================================================
+  // Develop Mode
+  // ===========================================================
+  if (__DEV__) {
+    return (
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(tabs)" />
+      </Stack>
+    );
+  }
+  // ===========================================================
+  // Main
+  // ===========================================================
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Protected guard={!isLogIn}>
+        <Stack.Screen name="(auth)" />
+      </Stack.Protected>
+      <Stack.Protected guard={isLogIn}>
+        <Stack.Screen name="(tabs)" />
+      </Stack.Protected>
+    </Stack>
+  );
+}
 
 export default function RootLayout() {
   // ===========================================================
@@ -20,28 +55,18 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (fontsLoaded) {
-      SplashScreen: hideAsync();
+      SplashScreen.hideAsync();
     }
   }, [fontsLoaded]);
 
   if (!fontsLoaded) return null;
 
   // ===========================================================
-  // Dev Mode
-  // ===========================================================
-  const devmode = __DEV__;
-
-  // ===========================================================
   // Main
   // ===========================================================
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Protected guard={!devmode}>
-        <Stack.Screen name="(auth)" />
-      </Stack.Protected>
-      <Stack.Protected guard={devmode}>
-        <Stack.Screen name="(tabs)" />
-      </Stack.Protected>
-    </Stack>
+    <AuthProvider>
+      <RootNavigator />
+    </AuthProvider>
   );
 }
