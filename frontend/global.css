@@ -44,6 +44,13 @@
     --spacing-20: 80px;
     --spacing-24: 96px;
     --spacing-30: 120px;
+
+    --font-sans: sans-regular;
+    --font-sans-light: sans-light;
+    --font-sans-medium: sans-medium;
+    --font-sans-semibold: sans-semibold;
+    --font-sans-bold: sans-bold;
+    --font-sans-extrabold: sans-extrabold;
 }
 
 @layer components {
