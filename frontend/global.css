@@ -30,19 +30,28 @@
     --font-sans-spec60: spec-60;
 
     /*Font Size*/
-    --text-heading: 40px;
+    --text-heading: 45px;
     --text-normal: 20px;
     --text-small: 15px;
-    --text-box: 25px;
+    --text-box: 22px;
     --text-button: 20px;
 
     /*===============================================================*/
     /*Border*/
     /*===============================================================*/
-    /*Radius*/
-    --radius-normal: 100px;
     /*Border Color*/
     --color-border-brand: #101010;
+
+    /*===============================================================*/
+    /*Card*/
+    /*===============================================================*/
+    /*Radius*/
+    --radius-card: 15px;
+
+    /*Font Size*/
+    --text-card-name: 30px;
+    --text-card-price: 22px;
+    --text-card-des: 20px;
 }
 
 @layer components {
@@ -54,11 +63,14 @@
     }
 
     .page-content {
-        @apply flex-1 px-5 py-4;
+        @apply flex-1 px-6 py-5;
     }
 
     .content-normal {
-        @apply p-4;
+        @apply pt-1 pb-1;
+    }
+    .content-spec {
+        @apply pt-3 pb-3;
     }
 
     /*===============================================================*/
@@ -79,9 +91,26 @@
     }
 
     /*===============================================================*/
-    /*Box | Card*/
+    /*Box | Button | Card*/
     /*===============================================================*/
     .box-normal {
-        @apply p-3 ps-5 pe-5 border rounded-normal border-border-brand bg-white;
+        @apply p-3 ps-5 pe-5 border rounded-full border-border-brand;
+    }
+    .button-normal {
+        @apply border rounded-full border-border-brand;
+    }
+
+    /*Card*/
+    .card-normal {
+        @apply p-3 border rounded-card  border-border-brand;
+    }
+    .card-name {
+        @apply text-card-name font-sans-spec36;
+    }
+    .card-price {
+        @apply text-card-price font-sans-bold;
+    }
+    .card-des {
+        @apply text-card-des font-sans-italic;
     }
 }

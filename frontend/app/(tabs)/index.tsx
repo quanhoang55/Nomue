@@ -1,6 +1,80 @@
 import "@/global.css";
-import { Text, TextInput, View } from "react-native";
+import { Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { FoodCard, FoodCardType } from "@/components/food/FoodCard";
+
+// ====================================================================================
+// Card Data Test
+// ====================================================================================
+const card_1: FoodCardType = {
+  id: "1",
+  name: "Phở",
+  image: "none",
+  price: "50.000 VND",
+  description: "Beaf Noddle",
+};
+
+// ====================================================================================
+// Functions
+// ====================================================================================
+
+function chooseLocation() {
+  console.log("searching...");
+}
+
+// ====================================================================================
+// MAIN UI
+// ====================================================================================
+function Avatar() {
+  return (
+    <View className="content-normal flex-row items-center justify-between pl-2">
+      <Text className="text-normal">Hello, Quan</Text>
+      <View className="flex-row items-center">
+        <Text className="text-small pr-3">QuanHoang</Text>
+        <View className="w-10 h-10 rounded-full box-normal bg-i-green"></View>
+      </View>
+    </View>
+  );
+}
+
+function LocationSearch() {
+  return (
+    <View className="content-normal flex-row items-center justify-between">
+      <TextInput
+        className="box-normal bg-white h-15 w-[68%] max-w-[80%] min-w-[25%]"
+        placeholder="Your Location?"
+        placeholderTextColor="#10101033"
+      >
+        <Text className="text-box">Hanoi</Text>
+      </TextInput>
+      <TouchableOpacity
+        className="button-normal bg-i-blue h-15 w-[28%] max-w-[75%] min-w-[20%] justify-center items-center"
+        onPress={chooseLocation}
+      >
+        <Text className="">Search</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+function ScrollCardView() {
+  return (
+    <View>
+      <FoodCard item={card_1} />
+    </View>
+  );
+}
+
+function MainBody() {
+  return (
+    <View>
+      <View className="w-[80%]">
+        <Text className="text-heading">Hungry?</Text>
+        <Text className="text-heading">Let’s Fix That.</Text>
+      </View>
+    </View>
+  );
+}
 
 export default function MainPage() {
   // ===========================================================
@@ -10,23 +84,14 @@ export default function MainPage() {
     <View className="page-view">
       <SafeAreaView style={{ flex: 1 }}>
         <View className="page-content">
-          <View className="content-normal flex-row items-center justify-between">
-            <Text className="text-normal">Hello, Quan</Text>
-            <View className="flex-row items-center">
-              <Text className="text-small pr-3">QuanHoang</Text>
-              <View className="w-10 h-10 rounded-full bg-i-green"></View>
-            </View>
+          <View>
+            <Avatar />
+            <LocationSearch />
           </View>
-          <View className="">
-            <TextInput
-              className="box-normal h-15 w-[70%] max-w-[80%] min-w-[25%]"
-              placeholder="Your Location?"
-              placeholderTextColor="#10101033"
-            >
-              <Text className="text-box">Hanoi</Text>
-            </TextInput>
+          <View className="content-spec">
+            <MainBody />
+            <ScrollCardView />
           </View>
-          <View></View>
         </View>
       </SafeAreaView>
     </View>
