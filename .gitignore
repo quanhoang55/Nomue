@@ -57,3 +57,6 @@ wheels/
 *.tmp
 *.temp
 *.orig.*
+
+# Collected/raw data
+private_data/
