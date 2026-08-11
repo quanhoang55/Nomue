@@ -8,7 +8,7 @@
     /*===============================================================*/
     /*Color*/
     /*===============================================================*/
-    --color-background: #fdf2ec;
+    --color-background: #fffcf9;
     --color-foreground: #101010;
     --color-i-green: #20bd6b;
     --color-i-purple: #bd89f4;
@@ -33,7 +33,7 @@
     --text-heading: 45px;
     --text-normal: 20px;
     --text-small: 15px;
-    --text-box: 22px;
+    --text-box: 15px;
     --text-button: 20px;
 
     /*===============================================================*/
@@ -59,7 +59,7 @@
     /*Page | Content*/
     /*===============================================================*/
     .page-view {
-        @apply flex-1 bg-background;
+        @apply flex-1;
     }
 
     .page-content {
@@ -94,7 +94,7 @@
     /*Box | Button | Card*/
     /*===============================================================*/
     .box-normal {
-        @apply p-3 ps-5 pe-5 border rounded-full border-border-brand;
+        @apply p-2 ps-5 pe-5 border rounded-full border-border-brand;
     }
     .button-normal {
         @apply border rounded-full border-border-brand;

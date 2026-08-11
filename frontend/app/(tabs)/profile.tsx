@@ -2,6 +2,7 @@ import "@/global.css";
 import { router } from "expo-router";
 import { Text, View, Button } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { GradientBackground } from "@/components/ui/GradientBackground";
 
 export default function Profile() {
   // ===========================================================
@@ -9,6 +10,7 @@ export default function Profile() {
   // ===========================================================
   return (
     <View className="page-view">
+      <GradientBackground />
       <SafeAreaView style={{ flex: 1 }}>
         <View className="page-content">
           <Text className="text-7xl font-sans-spec36 color-foreground">

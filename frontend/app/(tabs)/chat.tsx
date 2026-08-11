@@ -1,6 +1,7 @@
 import "@/global.css";
 import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { GradientBackground } from "@/components/ui/GradientBackground";
 
 export default function ChatPage() {
   // ===========================================================
@@ -8,10 +9,11 @@ export default function ChatPage() {
   // ===========================================================
   return (
     <View className="page-view">
+      <GradientBackground />
       <SafeAreaView style={{ flex: 1 }}>
         <View className="page-content">
           <Text className="text-7xl font-sans-spec36 color-foreground">
-            Chat Page
+            chat page
           </Text>
         </View>
       </SafeAreaView>
