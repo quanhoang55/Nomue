@@ -22,6 +22,12 @@ RAW_DISH_PROVINCES = os.path.join(RAW_PATH, "dish_provinces.xlsx")
 RAW_LOCAL_AREA = os.path.join(RAW_PATH, "local_area.xlsx")
 RAW_PROVINCES = os.path.join(RAW_PATH, "province.xlsx")
 
+# DATA PATH
+CLEAN_DISH = os.path.join(CLEAN_PATH, "dish.xlsx")
+CLEAN_DISH_PROVINCES = os.path.join(CLEAN_PATH, "dish_province.xlsx")
+CLEAN_LOCAL_AREA = os.path.join(CLEAN_PATH, "local_area.xlsx")
+CLEAN_PROVINCES = os.path.join(CLEAN_PATH, "province.xlsx")
+
 
 # ==========================================================================
 # CORE LOGIC & FUNCTIONS
@@ -34,12 +40,13 @@ def check_path(path: str) -> bool:
 # MAIN EXECUTION ENTRYPOINT
 # ==========================================================================
 def main():
-    path_check = RAW_LOCAL_AREA
-    if check_path(path_check):
-        print(check_path(path_check))
-        print(path_check)
-    else:
-        print("Path does not exist")
+    path_check = [CLEAN_DISH, CLEAN_DISH_PROVINCES, CLEAN_LOCAL_AREA, CLEAN_PROVINCES]
+    for path in path_check:
+        if check_path(path):
+            print(check_path(path))
+            print(path)
+        else:
+            print("Path does not exist")
 
 
 if __name__ == "__main__":
