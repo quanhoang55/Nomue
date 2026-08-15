@@ -3,11 +3,13 @@ import { Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FoodCard, FoodCardType } from "@/components/food/FoodCard";
 import { GradientBackground } from "@/components/ui/GradientBackground";
+import { getDish } from "@/services/dish";
+import { useState } from "react";
 
 // ====================================================================================
 // Card Data Test
 // ====================================================================================
-const card_1: FoodCardType = {
+const base_card: FoodCardType = {
   id: "1",
   name: "Phở",
   image: "none",
@@ -57,9 +59,33 @@ function LocationSearch() {
 }
 
 function ScrollCardView() {
+  const [card, getCard] = useState<FoodCardType>(base_card);
+
+  const dish_id = "014d50ef-8cf4-4a25-8c1a-2cf4b215f164";
+  async function findDish(dish_id: string) {
+    try {
+      const response = await getDish(dish_id);
+
+      const new_card: FoodCardType = {
+        id: response.id,
+        name: response.name,
+        image: "none",
+        price: String(response.typical_price),
+        description: response.description ?? "",
+      };
+
+      getCard(new_card);
+    } catch (error) {
+      console.error("findDish error:", error);
+    }
+  }
+
   return (
     <View>
-      <FoodCard item={card_1} />
+      <TouchableOpacity onPress={() => findDish(dish_id)}>
+        <Text>Find</Text>
+      </TouchableOpacity>
+      <FoodCard item={card} />
     </View>
   );
 }

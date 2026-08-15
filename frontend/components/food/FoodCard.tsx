@@ -9,7 +9,7 @@ export type FoodCardType = {
   name: string;
   image: string;
   price: string;
-  description: string;
+  description: string | null;
 };
 
 // ===========================================================

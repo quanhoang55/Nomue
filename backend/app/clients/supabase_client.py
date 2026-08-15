@@ -3,15 +3,26 @@
 # ==========================================================================
 # IMPORTS & MODULE LOADING
 # ==========================================================================
-from supabase import Client, create_client
+from supabase import AsyncClient, acreate_client
 
 from app.core.config import settings
 
 # ==========================================================================
-# PARAMETERS
+# GLOBAL Client
 # ==========================================================================
+_supabase: AsyncClient | None = None
 
-# Supabase client init
-supabase: Client = create_client(
-    supabase_url=settings.supabase_url, supabase_key=settings.supabase_secret_key
-)
+
+# ==========================================================================
+# SUPABASE ASYNC CLIENT INIT
+# ==========================================================================
+async def get_supabase() -> AsyncClient:
+    global _supabase
+
+    if _supabase is None:
+        _supabase = await acreate_client(
+            supabase_url=settings.supabase_url,
+            supabase_key=settings.supabase_secret_key,
+        )
+
+    return _supabase

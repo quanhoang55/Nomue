@@ -4,24 +4,22 @@
 # IMPORTS & MODULE LOADING
 # ==========================================================================
 from functools import lru_cache
+from typing import Literal
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
-# ==========================================================================
-# PARAMETERS
-# ==========================================================================
 
 
 # ==========================================================================
 # CLASSES / DATA STRUCTURE: Setting
 # ==========================================================================
 class Settings(BaseSettings):
-    app_env: str = "development"
+    app_env: Literal["development", "testing", "production"] = "development"
     app_name: str = "Nomue"
     api_v1_prefix: str = "/api/v1"
 
-    supabase_url: str
-    supabase_secret_key: str
+    supabase_url: str = Field(default=...)
+    supabase_secret_key: str = Field(default=...)
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -45,4 +43,4 @@ def get_settings() -> Settings:
 # ==========================================================================
 # MAIN EXECUTION ENTRYPOINT
 # ==========================================================================
-settings = get_settings()
+settings: Settings = get_settings()

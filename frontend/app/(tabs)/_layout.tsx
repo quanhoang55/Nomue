@@ -17,7 +17,7 @@ export default function RootLayout() {
           sf={{ default: "house", selected: "house.fill" }}
           drawable="custom_home_drawable"
         />
-        <Label>Home</Label>
+        <Label hidden={true}>Home</Label>
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="chat">
@@ -25,7 +25,7 @@ export default function RootLayout() {
           sf={{ default: "message", selected: "message.fill" }}
           drawable="custom_chat_drawable"
         />
-        <Label>Chat</Label>
+        <Label hidden={true}>Chat</Label>
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="profile">
@@ -33,7 +33,7 @@ export default function RootLayout() {
           sf={{ default: "person", selected: "person.fill" }}
           drawable="custom_profile_drawable"
         />
-        <Label>Profile</Label>
+        <Label hidden={true}>Profile</Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
