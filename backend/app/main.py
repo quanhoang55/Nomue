@@ -11,7 +11,9 @@ from fastapi import FastAPI
 
 from app.api.v1.router import api_router
 from app.core.config import settings
+from app.core.exceptions import AppError
 from app.core.logging import setup_logging
+from app.middleware.error_handler import app_error_handler
 
 # ==========================================================================
 # PARAMETERS
@@ -33,6 +35,7 @@ def create_app() -> FastAPI:
     setup_logging()
 
     app = FastAPI(title=settings.app_name, lifespan=lifespan)
+    app.add_exception_handler(AppError, app_error_handler)
     app.include_router(api_router, prefix=settings.api_v1_prefix)
 
     return app

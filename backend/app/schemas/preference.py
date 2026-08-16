@@ -8,6 +8,10 @@ from pydantic import Field
 
 from app.schemas.common import RequestModel, ResponseModel
 
+# ==========================================================================
+# CLASSES / DATA STRUCTURE: PreferenceFields
+# ==========================================================================
+
 
 class PreferenceFields(RequestModel):
     spice_preference: int = Field(ge=0, le=5)
@@ -24,8 +28,18 @@ class PreferenceFields(RequestModel):
     allergy_preference: str | None = None
 
 
+# ==========================================================================
+# CLASSES / DATA STRUCTURE: PreferenceCreate
+# ==========================================================================
+
+
 class PreferenceCreate(PreferenceFields):
     pass
+
+
+# ==========================================================================
+# CLASSES / DATA STRUCTURE: PreferenceUpdate
+# ==========================================================================
 
 
 class PreferenceUpdate(RequestModel):
@@ -43,6 +57,9 @@ class PreferenceUpdate(RequestModel):
     allergy_preference: str | None = None
 
 
+# ==========================================================================
+# CLASSES / DATA STRUCTURE: PreferenceResponse
+# ==========================================================================
 class PreferenceResponse(ResponseModel):
     id: UUID
     user_id: UUID

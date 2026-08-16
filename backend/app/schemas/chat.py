@@ -10,10 +10,19 @@ from app.schemas.common import RequestModel, ResponseModel
 from app.schemas.dish import DishResponse
 from app.schemas.restaurant import RestaurantResponse
 
+# ==========================================================================
+# CLASSES / DATA STRUCTURE: ChatRequest
+# ==========================================================================
+
 
 class ChatRequest(RequestModel):
     message: str = Field(min_length=1)
     conversation_id: str | None = Field(default=None, min_length=1)
+
+
+# ==========================================================================
+# CLASSES / DATA STRUCTURE: ChatResponse
+# ==========================================================================
 
 
 class ChatResponse(ResponseModel):
@@ -21,4 +30,5 @@ class ChatResponse(ResponseModel):
     recommended_dishes: list[DishResponse] = Field(default_factory=list)
     recommended_restaurants: list[RestaurantResponse] = Field(default_factory=list)
     extracted_preferences: dict[str, Any] | None = None
-    reasoning: str | None = None
+    explanation: str | None = None
+    # reasoning: str | None = None

@@ -8,11 +8,20 @@ from pydantic import Field
 
 from app.schemas.common import RequestModel, ResponseModel
 
+# ==========================================================================
+# CLASSES / DATA STRUCTURE: UsageEventCreate
+# ==========================================================================
+
 
 class UsageEventCreate(RequestModel):
-    user_id: UUID
+    # user_id: UUID
     usage_type: str = Field(min_length=1)
     amount: int = Field(default=1, gt=0)
+
+
+# ==========================================================================
+# CLASSES / DATA STRUCTURE: UsageEventResponse
+# ==========================================================================
 
 
 class UsageEventResponse(ResponseModel):

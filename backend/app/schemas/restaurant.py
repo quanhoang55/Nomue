@@ -9,6 +9,10 @@ from pydantic import Field
 
 from app.schemas.common import ResponseModel
 
+# ==========================================================================
+# CLASSES / DATA STRUCTURE: RestaurantDishResponse
+# ==========================================================================
+
 
 class RestaurantDishResponse(ResponseModel):
     id: UUID
@@ -16,7 +20,12 @@ class RestaurantDishResponse(ResponseModel):
     dish_id: UUID
     province_id: UUID
     local_area_id: UUID | None = None
-    last_verified_at: datetime
+    last_verified_at: datetime | None = None
+
+
+# ==========================================================================
+# CLASSES / DATA STRUCTURE: RestaurantResponse
+# ==========================================================================
 
 
 class RestaurantResponse(ResponseModel):
@@ -30,6 +39,11 @@ class RestaurantResponse(ResponseModel):
     dish_id: UUID
     last_verified_at: datetime | None = None
     source: Literal["db", "places_api"]
+
+
+# ==========================================================================
+# CLASSES / DATA STRUCTURE: MapPin
+# ==========================================================================
 
 
 class MapPin(ResponseModel):

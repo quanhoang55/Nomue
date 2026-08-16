@@ -3,11 +3,16 @@
 # ==========================================================================
 from datetime import datetime
 from decimal import Decimal
+from typing import Literal
 from uuid import UUID
 
 from pydantic import Field
 
 from app.schemas.common import ResponseModel
+
+# ==========================================================================
+# CLASSES / DATA STRUCTURE: SubscriptionPlanResponse
+# ==========================================================================
 
 
 class SubscriptionPlanResponse(ResponseModel):
@@ -16,13 +21,28 @@ class SubscriptionPlanResponse(ResponseModel):
     revenuecat_entitlement_id: str
     revenuecat_offering_id: str | None = None
     price: Decimal = Field(ge=0)
-    duration_days: int = Field(ge=0)
-    daily_ai_limit: int = Field(ge=0)
-    weekly_ai_limit: int = Field(ge=0)
-    monthly_ai_limit: int = Field(ge=0)
+    duration_days: int = Field(gt=0)
+    daily_token_limit: int = Field(ge=0)
+    weekly_token_limit: int = Field(ge=0)
+    monthly_token_limit: int = Field(ge=0)
     is_active: bool
     created_at: datetime
     updated_at: datetime
+
+
+# ==========================================================================
+# Literal Status
+# ==========================================================================
+
+SubscriptionStatusValue = Literal[
+    "active",
+    "expired",
+    "cancelled",
+    "trialing",
+]
+# ==========================================================================
+# CLASSES / DATA STRUCTURE: UserSubscriptionResponse
+# ==========================================================================
 
 
 class UserSubscriptionResponse(ResponseModel):
@@ -31,7 +51,7 @@ class UserSubscriptionResponse(ResponseModel):
     plan_id: UUID
     revenuecat_app_user_id: str
     entitlement_id: str
-    status: str
+    status: SubscriptionStatusValue
     started_at: datetime
     expires_at: datetime | None = None
     cancelled_at: datetime | None = None
@@ -40,10 +60,15 @@ class UserSubscriptionResponse(ResponseModel):
     updated_at: datetime
 
 
+# ==========================================================================
+# CLASSES / DATA STRUCTURE: SubscriptionStatus
+# ==========================================================================
+
+
 class SubscriptionStatus(ResponseModel):
     plan_name: str
-    status: str
+    status: SubscriptionStatusValue
     expires_at: datetime | None = None
-    daily_ai_remaining: int = Field(ge=0)
-    weekly_ai_remaining: int = Field(ge=0)
-    monthly_ai_remaining: int = Field(ge=0)
+    daily_token_remaining: int = Field(ge=0)
+    weekly_token_remaining: int = Field(ge=0)
+    monthly_token_remaining: int = Field(ge=0)

@@ -6,10 +6,18 @@ from uuid import UUID
 
 from app.schemas.common import RequestModel, ResponseModel
 
+# ==========================================================================
+# CLASSES / DATA STRUCTURE: FoodHistoryCreate
+# ==========================================================================
+
 
 class FoodHistoryCreate(RequestModel):
-    user_id: UUID
     dish_id: UUID
+
+
+# ==========================================================================
+# CLASSES / DATA STRUCTURE: FoodHistoryResponse
+# ==========================================================================
 
 
 class FoodHistoryResponse(ResponseModel):

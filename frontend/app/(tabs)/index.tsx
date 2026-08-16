@@ -1,29 +1,28 @@
 import "@/global.css";
-import { Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { FoodCard, FoodCardType } from "@/components/food/FoodCard";
+import { FoodCard, type FoodCardType } from "@/components/food/FoodCard";
 import { GradientBackground } from "@/components/ui/GradientBackground";
-import { getDish } from "@/services/dish";
-import { useState } from "react";
+import { getDishes } from "@/services/dish";
+import { useCallback, useEffect, useState } from "react";
 
 // ====================================================================================
-// Card Data Test
+// Temporary Stage 1 Location
 // ====================================================================================
-const base_card: FoodCardType = {
-  id: "1",
-  name: "Phở",
-  image: "none",
-  price: "50.000 VND",
-  description: "Beaf Noddle",
-};
+const DEFAULT_PROVINCE_ID = "184649d0-2df2-4173-bd1e-9d61089fb841";
 
-// ====================================================================================
-// Functions
-// ====================================================================================
-
-function chooseLocation() {
-  console.log("searching...");
-}
+const vndFormatter = new Intl.NumberFormat("vi-VN", {
+  style: "currency",
+  currency: "VND",
+  maximumFractionDigits: 0,
+});
 
 // ====================================================================================
 // MAIN UI
@@ -45,48 +44,87 @@ function LocationSearch() {
         className="box-normal bg-white h-10 w-[68%] max-w-[80%] min-w-[25%]"
         placeholder="Your Location?"
         placeholderTextColor="#10101033"
-      >
-        <Text className="text-box">Hanoi</Text>
-      </TextInput>
-      {/*<TouchableOpacity
-        className="button-normal bg-i-blue h-15 w-[28%] max-w-[75%] min-w-[20%] justify-center items-center"
-        onPress={chooseLocation}
-      >
-        <Text className="">Search</Text>
-      </TouchableOpacity>*/}
+        value="Phú Thọ"
+        editable={false}
+      />
     </View>
   );
 }
 
 function ScrollCardView() {
-  const [card, getCard] = useState<FoodCardType>(base_card);
+  const [cards, setCards] = useState<FoodCardType[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const dish_id = "014d50ef-8cf4-4a25-8c1a-2cf4b215f164";
-  async function findDish(dish_id: string) {
+  const loadDishes = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
     try {
-      const response = await getDish(dish_id);
-
-      const new_card: FoodCardType = {
-        id: response.id,
-        name: response.name,
-        image: "none",
-        price: String(response.typical_price),
-        description: response.description ?? "",
-      };
-
-      getCard(new_card);
-    } catch (error) {
-      console.error("findDish error:", error);
+      const dishes = await getDishes(DEFAULT_PROVINCE_ID);
+      setCards(
+        dishes.map((dish) => ({
+          id: dish.id,
+          name: dish.name,
+          price: vndFormatter.format(dish.typical_price),
+          description: dish.description,
+        })),
+      );
+    } catch (requestError) {
+      setCards([]);
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Unable to load dishes",
+      );
+    } finally {
+      setIsLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    void loadDishes();
+  }, [loadDishes]);
+
+  if (isLoading) {
+    return (
+      <View className="items-center py-10">
+        <ActivityIndicator size="large" />
+        <Text className="text-box mt-3">Loading local dishes…</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View className="items-center py-10">
+        <Text className="text-box text-center">{error}</Text>
+        <Pressable
+          className="button-normal bg-i-blue mt-4 px-5 py-3"
+          onPress={() => void loadDishes()}
+        >
+          <Text>Try again</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  if (cards.length === 0) {
+    return <Text className="text-box py-10">No dishes found for Phú Thọ.</Text>;
   }
 
   return (
-    <View>
-      <TouchableOpacity onPress={() => findDish(dish_id)}>
-        <Text>Find</Text>
-      </TouchableOpacity>
-      <FoodCard item={card} />
-    </View>
+    <FlatList
+      data={cards}
+      horizontal
+      keyExtractor={(item) => item.id}
+      renderItem={({ item }) => (
+        <View className="w-72">
+          <FoodCard item={item} />
+        </View>
+      )}
+      ItemSeparatorComponent={() => <View className="w-4" />}
+      showsHorizontalScrollIndicator={false}
+    />
   );
 }
 

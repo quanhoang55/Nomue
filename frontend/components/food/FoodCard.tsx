@@ -7,7 +7,7 @@ import { Image, Pressable, Text, View } from "react-native";
 export type FoodCardType = {
   id: string;
   name: string;
-  image: string;
+  image?: string | null;
   price: string;
   description: string | null;
 };
@@ -30,11 +30,17 @@ function findLocation(id: string) {
 // ===========================================================
 export function FoodCard({ item }: { item: FoodCardType }) {
   return (
-    <View className="w-[50%] max-h-110 min-h-80 h-85 card-normal bg-i-orange">
-      <Image
-        source={{ uri: item.image }}
-        className="w-full h-40 card-normal bg-white"
-      />
+    <View className="w-full max-h-110 min-h-80 h-85 card-normal bg-i-orange">
+      {item.image ? (
+        <Image
+          source={{ uri: item.image }}
+          className="w-full h-40 card-normal bg-white"
+        />
+      ) : (
+        <View className="w-full h-40 card-normal bg-white items-center justify-center">
+          <Text className="text-box">Image coming soon</Text>
+        </View>
+      )}
       <Text className="card-name">{item.name}</Text>
       <Text className="card-price">{item.price}</Text>
       <Text className="card-des">{item.description}</Text>

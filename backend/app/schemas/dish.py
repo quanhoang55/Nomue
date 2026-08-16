@@ -1,11 +1,16 @@
 # ==========================================================================
 # IMPORTS & MODULE LOADING
 # ==========================================================================
+import pyclbr
 from uuid import UUID
 
 from pydantic import Field
 
 from app.schemas.common import RequestModel, ResponseModel
+
+# ==========================================================================
+# CLASSES / DATA STRUCTURE: DishFields
+# ==========================================================================
 
 
 class DishFields(RequestModel):
@@ -19,8 +24,18 @@ class DishFields(RequestModel):
     typical_price: int = Field(ge=0)
 
 
+# ==========================================================================
+# CLASSES / DATA STRUCTURE: DishCreate
+# ==========================================================================
+
+
 class DishCreate(DishFields):
     pass
+
+
+# ==========================================================================
+# CLASSES / DATA STRUCTURE: DishUpdate
+# ==========================================================================
 
 
 class DishUpdate(RequestModel):
@@ -32,6 +47,11 @@ class DishUpdate(RequestModel):
     bitterness_level: int | None = Field(default=None, ge=0, le=5)
     adventurous_level: int | None = Field(default=None, ge=0, le=5)
     typical_price: int | None = Field(default=None, ge=0)
+
+
+# ==========================================================================
+# CLASSES / DATA STRUCTURE: DishResponse
+# ==========================================================================
 
 
 class DishResponse(ResponseModel):
@@ -46,8 +66,13 @@ class DishResponse(ResponseModel):
     typical_price: int = Field(ge=0)
 
 
+# ==========================================================================
+# CLASSES / DATA STRUCTURE: DishProvinceResponse
+# ==========================================================================
+
+
 class DishProvinceResponse(ResponseModel):
     id: UUID
     dish_id: UUID
     province_id: UUID
-    important_score: int
+    important_score: int = Field(ge=0, le=5)

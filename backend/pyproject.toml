@@ -5,7 +5,10 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "fastapi[standard]>=0.141.1",
+    "fastapi[standard]>=0.141.1,<1",
     "ipykernel>=7.3.0",
-    "supabase>=2.31.0",
+    "pydantic>=2.12.5,<3",
+    "pydantic-settings>=2.15.0,<3",
+    "supabase>=2.31.0,<3",
+    "supabase-auth>=2.31.0,<3",
 ]

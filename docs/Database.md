@@ -140,19 +140,19 @@ These are different from the generic `created_at` / `updated_at` fields.
 
 Stores the canonical information for a Vietnamese dish.
 
-| Column | Role | Description |
-|---|---|---|
-| `id` | PK | Unique UUID identifying the dish. |
-| `name` | Data | Display name of the dish. |
-| `description` | Data | Human-readable description of the dish. May be nullable if data is incomplete. |
-| `spice_level` | Data | Relative spice score, normally `0-5`. |
-| `sweetness_level` | Data | Relative sweetness score, normally `0-5`. |
-| `sourness_level` | Data | Relative sourness score, normally `0-5`. |
-| `bitterness_level` | Data | Relative bitterness score, normally `0-5`. |
-| `adventurous_level` | Data | How unfamiliar/adventurous the dish may feel to a typical international traveler, normally `0-5`. |
-| `typical_price` | Data | Typical price of the dish in VND. Should be non-negative. |
-| `created_at` | Metadata | Time the record was created. |
-| `updated_at` | Metadata | Time the record was last updated. |
+| Column              | Role     | Description                                                                                       |
+| ------------------- | -------- | ------------------------------------------------------------------------------------------------- |
+| `id`                | PK       | Unique UUID identifying the dish.                                                                 |
+| `name`              | Data     | Display name of the dish.                                                                         |
+| `description`       | Data     | Human-readable description of the dish. May be nullable if data is incomplete.                    |
+| `spice_level`       | Data     | Relative spice score, normally `0-5`.                                                             |
+| `sweetness_level`   | Data     | Relative sweetness score, normally `0-5`.                                                         |
+| `sourness_level`    | Data     | Relative sourness score, normally `0-5`.                                                          |
+| `bitterness_level`  | Data     | Relative bitterness score, normally `0-5`.                                                        |
+| `adventurous_level` | Data     | How unfamiliar/adventurous the dish may feel to a typical international traveler, normally `0-5`. |
+| `typical_price`     | Data     | Typical price of the dish in VND. Should be non-negative.                                         |
+| `created_at`        | Metadata | Time the record was created.                                                                      |
+| `updated_at`        | Metadata | Time the record was last updated.                                                                 |
 
 ### Important notes
 
@@ -196,9 +196,9 @@ Pydantic validation protects the API from invalid database data, while a Postgre
 
 Stores the province-level geographical entities used by Nomue.
 
-| Column | Role | Description |
-|---|---|---|
-| `id` | PK | Unique UUID identifying the province. |
+| Column | Role | Description                                           |
+| ------ | ---- | ----------------------------------------------------- |
+| `id`   | PK   | Unique UUID identifying the province.                 |
 | `name` | Data | Province / municipality name used by the application. |
 
 Example:
@@ -228,14 +228,14 @@ Stores smaller geographical areas that belong to a province.
 
 Examples include districts, cities, towns, and other local administrative areas.
 
-| Column | Role | Description |
-|---|---|---|
-| `id` | PK | Unique UUID identifying the local area. |
-| `province_id` | FK → `province.id` | Province containing this local area. |
-| `name` | Data | Local-area name. |
-| `area_type` | Data | Administrative type such as city, district, town, etc. |
-| `latitude` | Data | Representative latitude for location matching. |
-| `longitude` | Data | Representative longitude for location matching. |
+| Column        | Role               | Description                                            |
+| ------------- | ------------------ | ------------------------------------------------------ |
+| `id`          | PK                 | Unique UUID identifying the local area.                |
+| `province_id` | FK → `province.id` | Province containing this local area.                   |
+| `name`        | Data               | Local-area name.                                       |
+| `area_type`   | Data               | Administrative type such as city, district, town, etc. |
+| `latitude`    | Data               | Representative latitude for location matching.         |
+| `longitude`   | Data               | Representative longitude for location matching.        |
 
 Relationship:
 
@@ -279,11 +279,11 @@ This is a **many-to-many relationship table**.
 
 A dish may belong to several provinces, and a province may have many dishes.
 
-| Column | Role | Description |
-|---|---|---|
-| `id` | PK | Unique UUID for the relationship row. |
-| `dish_id` | FK → `dish.id` | Dish in this relationship. |
-| `province_id` | FK → `province.id` | Province in this relationship. |
+| Column            | Role                  | Description                                                  |
+| ----------------- | --------------------- | ------------------------------------------------------------ |
+| `id`              | PK                    | Unique UUID for the relationship row.                        |
+| `dish_id`         | FK → `dish.id`        | Dish in this relationship.                                   |
+| `province_id`     | FK → `province.id`    | Province in this relationship.                               |
 | `important_score` | Relationship metadata | Relative importance/relevance of this dish to this province. |
 
 Relationship:
@@ -347,14 +347,14 @@ UNIQUE (dish_id, province_id)
 
 Stores the relationship between a known Google place / restaurant and a Nomue dish.
 
-| Column | Role | Description |
-|---|---|---|
-| `id` | PK | Unique UUID identifying this relationship. |
-| `google_place_id` | External ID | Stable Google Places identifier for the restaurant/place. |
-| `dish_id` | FK → `dish.id` | Dish associated with the restaurant. |
-| `province_id` | FK → `province.id` | Province where the restaurant belongs. |
-| `local_area_id` | FK → `local_area.id`, nullable | More specific local area when known. |
-| `last_verified_at` | Metadata | Last time the relationship/place was checked or verified. |
+| Column             | Role                           | Description                                               |
+| ------------------ | ------------------------------ | --------------------------------------------------------- |
+| `id`               | PK                             | Unique UUID identifying this relationship.                |
+| `google_place_id`  | External ID                    | Stable Google Places identifier for the restaurant/place. |
+| `dish_id`          | FK → `dish.id`                 | Dish associated with the restaurant.                      |
+| `province_id`      | FK → `province.id`             | Province where the restaurant belongs.                    |
+| `local_area_id`    | FK → `local_area.id`, nullable | More specific local area when known.                      |
+| `last_verified_at` | Metadata                       | Last time the relationship/place was checked or verified. |
 
 This table intentionally stores the Google `place_id`, rather than trying to permanently copy all dynamic Google Maps data.
 
@@ -389,15 +389,15 @@ Application-level user profile linked to authentication.
 
 > If the deployed database currently uses another exact name for this table, keep the real Supabase name as the source of truth. The project convention itself remains singular.
 
-| Column | Role | Description |
-|---|---|---|
-| `id` | PK | Internal Nomue user UUID. |
-| `username` | Unique, nullable | Optional unique username. |
-| `email` | Data | User email. |
-| `display_name` | Data | Name displayed by the app. |
-| `country_code` | Data | User's country/region code when available. |
-| `preferred_language` | Data | Preferred application language. |
-| `status` | Data | Application account status. |
+| Column               | Role             | Description                                |
+| -------------------- | ---------------- | ------------------------------------------ |
+| `id`                 | PK               | Internal Nomue user UUID.                  |
+| `username`           | Unique, nullable | Optional unique username.                  |
+| `email`              | Data             | User email.                                |
+| `display_name`       | Data             | Name displayed by the app.                 |
+| `country_code`       | Data             | User's country/region code when available. |
+| `preferred_language` | Data             | Preferred application language.            |
+| `status`             | Data             | Application account status.                |
 
 Authentication identity should remain separate from application business data where practical.
 
@@ -409,24 +409,24 @@ The backend should determine the authenticated user from the verified Supabase J
 
 Stores food preferences for one user.
 
-| Column | Role | Description |
-|---|---|---|
-| `id` | PK | Unique preference-record UUID. |
-| `user_id` | FK → `user.id`, UNIQUE | User that owns these preferences. |
-| `spice_preference` | Data | Preferred spice level. |
-| `sweetness_preference` | Data | Preferred sweetness level. |
-| `sourness_preference` | Data | Preferred sourness level. |
-| `adventurous_preference` | Data | Preference for adventurous/unfamiliar dishes. |
-| `max_price` | Data | Optional user price ceiling. |
-| `vegetarian` | Data | Vegetarian preference/restriction. |
-| `vegan` | Data | Vegan preference/restriction. |
-| `no_pork` | Data | Avoid pork. |
-| `no_beef` | Data | Avoid beef. |
-| `no_seafood` | Data | Avoid seafood. |
-| `halal_preference` | Data | Halal-related preference. |
-| `allergy_preference` | Data | Allergy information/preferences used by the recommendation layer. |
-| `created_at` | Metadata | Creation time. |
-| `updated_at` | Metadata | Last update time. |
+| Column                   | Role                   | Description                                                       |
+| ------------------------ | ---------------------- | ----------------------------------------------------------------- |
+| `id`                     | PK                     | Unique preference-record UUID.                                    |
+| `user_id`                | FK → `user.id`, UNIQUE | User that owns these preferences.                                 |
+| `spice_preference`       | Data                   | Preferred spice level.                                            |
+| `sweetness_preference`   | Data                   | Preferred sweetness level.                                        |
+| `sourness_preference`    | Data                   | Preferred sourness level.                                         |
+| `adventurous_preference` | Data                   | Preference for adventurous/unfamiliar dishes.                     |
+| `max_price`              | Data                   | Optional user price ceiling.                                      |
+| `vegetarian`             | Data                   | Vegetarian preference/restriction.                                |
+| `vegan`                  | Data                   | Vegan preference/restriction.                                     |
+| `no_pork`                | Data                   | Avoid pork.                                                       |
+| `no_beef`                | Data                   | Avoid beef.                                                       |
+| `no_seafood`             | Data                   | Avoid seafood.                                                    |
+| `halal_preference`       | Data                   | Halal-related preference.                                         |
+| `allergy_preference`     | Data                   | Allergy information/preferences used by the recommendation layer. |
+| `created_at`             | Metadata               | Creation time.                                                    |
+| `updated_at`             | Metadata               | Last update time.                                                 |
 
 `user_id` should be unique because the intended relationship is:
 
@@ -446,20 +446,20 @@ rather than multiple active preference rows for the same user.
 
 Defines subscription products/plans understood by the backend.
 
-| Column | Role | Description |
-|---|---|---|
-| `id` | PK | Internal plan UUID. |
-| `name` | Data | Internal/display plan name. |
-| `revenuecat_entitlement_id` | Unique external ID | RevenueCat entitlement associated with the plan. |
-| `revenuecat_offering_id` | External ID, nullable | RevenueCat offering when applicable. |
-| `price` | Data | Plan price used by the application. |
-| `duration_days` | Data | Duration represented in days when applicable. |
-| `daily_ai_limit` | Data | Daily AI usage allowance. |
-| `weekly_ai_limit` | Data | Weekly AI usage allowance. |
-| `monthly_ai_limit` | Data | Monthly AI usage allowance. |
-| `is_active` | Data | Whether the plan is currently offered/usable. |
-| `created_at` | Metadata | Creation time. |
-| `updated_at` | Metadata | Last modification time. |
+| Column                      | Role                  | Description                                      |
+| --------------------------- | --------------------- | ------------------------------------------------ |
+| `id`                        | PK                    | Internal plan UUID.                              |
+| `name`                      | Data                  | Internal/display plan name.                      |
+| `revenuecat_entitlement_id` | Unique external ID    | RevenueCat entitlement associated with the plan. |
+| `revenuecat_offering_id`    | External ID, nullable | RevenueCat offering when applicable.             |
+| `price`                     | Data                  | Plan price used by the application.              |
+| `duration_days`             | Data                  | Duration represented in days when applicable.    |
+| `daily_token_limit`         | Data                  | Daily AI usage allowance.                        |
+| `weekly_token_limit`        | Data                  | Weekly AI usage allowance.                       |
+| `monthly_token_limit`       | Data                  | Monthly AI usage allowance.                      |
+| `is_active`                 | Data                  | Whether the plan is currently offered/usable.    |
+| `created_at`                | Metadata              | Creation time.                                   |
+| `updated_at`                | Metadata              | Last modification time.                          |
 
 RevenueCat remains the subscription source of truth for entitlement/payment state; this table defines how Nomue interprets plans and usage limits.
 
@@ -469,20 +469,20 @@ RevenueCat remains the subscription source of truth for entitlement/payment stat
 
 Stores Nomue's synchronized subscription state for a user.
 
-| Column | Role | Description |
-|---|---|---|
-| `id` | PK | Unique subscription-record UUID. |
-| `user_id` | FK → `user.id` | User who owns the subscription. |
-| `plan_id` | FK → `subscription_plan.id` | Nomue plan associated with the subscription. |
-| `revenuecat_app_user_id` | External ID | RevenueCat user identifier. |
-| `entitlement_id` | External ID | Entitlement reported by RevenueCat. |
-| `status` | Data | Current subscription status. |
-| `started_at` | Metadata | Subscription start time. |
-| `expires_at` | Metadata, nullable | Expiration time if applicable. |
-| `cancelled_at` | Metadata, nullable | Cancellation time if applicable. |
-| `last_synced_at` | Metadata | Last successful synchronization with RevenueCat. |
-| `created_at` | Metadata | Local row creation time. |
-| `updated_at` | Metadata | Local row update time. |
+| Column                   | Role                        | Description                                      |
+| ------------------------ | --------------------------- | ------------------------------------------------ |
+| `id`                     | PK                          | Unique subscription-record UUID.                 |
+| `user_id`                | FK → `user.id`              | User who owns the subscription.                  |
+| `plan_id`                | FK → `subscription_plan.id` | Nomue plan associated with the subscription.     |
+| `revenuecat_app_user_id` | External ID                 | RevenueCat user identifier.                      |
+| `entitlement_id`         | External ID                 | Entitlement reported by RevenueCat.              |
+| `status`                 | Data                        | Current subscription status.                     |
+| `started_at`             | Metadata                    | Subscription start time.                         |
+| `expires_at`             | Metadata, nullable          | Expiration time if applicable.                   |
+| `cancelled_at`           | Metadata, nullable          | Cancellation time if applicable.                 |
+| `last_synced_at`         | Metadata                    | Last successful synchronization with RevenueCat. |
+| `created_at`             | Metadata                    | Local row creation time.                         |
+| `updated_at`             | Metadata                    | Local row update time.                           |
 
 Do not trust frontend-provided subscription status.
 
@@ -501,13 +501,13 @@ RevenueCat
 
 Append-oriented table for recording metered usage.
 
-| Column | Role | Description |
-|---|---|---|
-| `id` | PK | Unique usage-event UUID. |
-| `user_id` | FK → `user.id` | User responsible for the usage. |
-| `usage_type` | Data | Type of usage, for example an AI chat request. |
-| `amount` | Data | Number of usage units represented by this event. |
-| `created_at` | Metadata | Time the usage occurred. |
+| Column       | Role           | Description                                      |
+| ------------ | -------------- | ------------------------------------------------ |
+| `id`         | PK             | Unique usage-event UUID.                         |
+| `user_id`    | FK → `user.id` | User responsible for the usage.                  |
+| `usage_type` | Data           | Type of usage, for example an AI chat request.   |
+| `amount`     | Data           | Number of usage units represented by this event. |
+| `created_at` | Metadata       | Time the usage occurred.                         |
 
 Example:
 
@@ -544,12 +544,12 @@ saved dish
 
 At minimum, this table will normally need relationships similar to:
 
-| Column | Role | Description |
-|---|---|---|
-| `id` | PK | Unique history/event UUID. |
-| `user_id` | FK → `user.id` | User associated with the event. |
-| `dish_id` | FK → `dish.id` | Dish associated with the event. |
-| `created_at` | Metadata | Time the event occurred. |
+| Column       | Role           | Description                     |
+| ------------ | -------------- | ------------------------------- |
+| `id`         | PK             | Unique history/event UUID.      |
+| `user_id`    | FK → `user.id` | User associated with the event. |
+| `dish_id`    | FK → `dish.id` | Dish associated with the event. |
+| `created_at` | Metadata       | Time the event occurred.        |
 
 Additional columns should only be added when the exact product behavior is defined.
 
