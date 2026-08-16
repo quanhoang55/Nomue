@@ -10,7 +10,6 @@ from app.schemas.dish import DishResponse
 from app.schemas.location import ProvinceResponse
 from app.services.dish_service import DishService
 
-
 DISH_ID_1 = UUID("11111111-1111-4111-8111-111111111111")
 DISH_ID_2 = UUID("22222222-2222-4222-8222-222222222222")
 PROVINCE_ID = UUID("33333333-3333-4333-8333-333333333333")

@@ -8,7 +8,6 @@ from app.core.exceptions import NotFoundError
 from app.main import app
 from app.schemas.dish import DishResponse
 
-
 DISH_ID = UUID("11111111-1111-4111-8111-111111111111")
 PROVINCE_ID = UUID("33333333-3333-4333-8333-333333333333")
 
@@ -105,9 +104,7 @@ class DishApiTests(TestCase):
         self.assertEqual(response.json()["name"], "Phở")
 
     def test_get_dish_ids_by_province(self) -> None:
-        response = self.client.get(
-            f"/api/v1/locations/{PROVINCE_ID}/dish-ids"
-        )
+        response = self.client.get(f"/api/v1/locations/{PROVINCE_ID}/dish-ids")
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), [str(DISH_ID)])
@@ -115,9 +112,7 @@ class DishApiTests(TestCase):
     def test_dish_ids_for_valid_empty_province_returns_empty_array(self) -> None:
         self.service.dish_ids_result = []
 
-        response = self.client.get(
-            f"/api/v1/locations/{PROVINCE_ID}/dish-ids"
-        )
+        response = self.client.get(f"/api/v1/locations/{PROVINCE_ID}/dish-ids")
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), [])
@@ -125,9 +120,7 @@ class DishApiTests(TestCase):
     def test_dish_ids_for_unknown_province_returns_404(self) -> None:
         self.service.province_missing = True
 
-        response = self.client.get(
-            f"/api/v1/locations/{PROVINCE_ID}/dish-ids"
-        )
+        response = self.client.get(f"/api/v1/locations/{PROVINCE_ID}/dish-ids")
 
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json()["error_code"], "not_found")

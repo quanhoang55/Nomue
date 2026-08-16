@@ -15,11 +15,16 @@ from app.core.exceptions import DatabaseError
 from app.schemas.location import ProvinceResponse
 
 logger = logging.getLogger(__name__)
+PROVINCE_CANDIDATE_PAGE_SIZE = 100
 
 
 class IProvinceRepository(ABC):
     @abstractmethod
     async def get_by_id(self, province_id: UUID) -> ProvinceResponse | None:
+        pass
+
+    @abstractmethod
+    async def list_all(self) -> list[ProvinceResponse]:
         pass
 
 
@@ -48,4 +53,33 @@ class ProvinceRepository(IProvinceRepository):
             logger.exception(
                 "Database error while fetching province ID: %s", province_id
             )
+            raise DatabaseError("Could not load province data") from exc
+
+    @override
+    async def list_all(self) -> list[ProvinceResponse]:
+        try:
+            provinces: list[ProvinceResponse] = []
+            offset = 0
+            while True:
+                response = await (
+                    self.db.table("province")
+                    .select("id,name")
+                    .order("name")
+                    .order("id")
+                    .range(
+                        offset,
+                        offset + PROVINCE_CANDIDATE_PAGE_SIZE - 1,
+                    )
+                    .execute()
+                )
+                rows = [] if response is None or response.data is None else response.data
+                provinces.extend(ProvinceResponse.model_validate(row) for row in rows)
+                if len(rows) < PROVINCE_CANDIDATE_PAGE_SIZE:
+                    return provinces
+                offset += PROVINCE_CANDIDATE_PAGE_SIZE
+        except ValidationError as exc:
+            logger.exception("Invalid province collection returned by database")
+            raise DatabaseError("The database returned invalid province data") from exc
+        except Exception as exc:
+            logger.exception("Database error while fetching provinces")
             raise DatabaseError("Could not load province data") from exc

@@ -41,6 +41,10 @@ class Settings(BaseSettings):
     jwt_audience: str = Field(default="authenticated", min_length=1)
     jwt_clock_skew_seconds: int = Field(default=10, ge=0, le=60)
     request_timeout_seconds: float = Field(default=10.0, gt=0, le=60)
+    location_max_match_distance_km: float = Field(
+        default=75.0,
+        gt=0,
+    )
 
     cors_allowed_origins: list[str] = Field(default_factory=list)
     trusted_hosts: list[str] = Field(

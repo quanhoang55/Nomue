@@ -7,7 +7,6 @@ from app.repositories.dish_province_repository import DishProvinceRepository
 from app.repositories.dish_repository import DishRepository
 from app.repositories.province_repository import ProvinceRepository
 
-
 DISH_ID_1 = UUID("11111111-1111-4111-8111-111111111111")
 DISH_ID_2 = UUID("22222222-2222-4222-8222-222222222222")
 PROVINCE_ID = UUID("33333333-3333-4333-8333-333333333333")
@@ -53,9 +52,7 @@ class DishRepositoryTests(IsolatedAsyncioTestCase):
 
         self.assertEqual([dish.id for dish in dishes], [DISH_ID_2, DISH_ID_1])
         db.table.assert_called_once_with("dish")
-        query.in_.assert_called_once_with(
-            "id", [str(DISH_ID_1), str(DISH_ID_2)]
-        )
+        query.in_.assert_called_once_with("id", [str(DISH_ID_1), str(DISH_ID_2)])
         query.limit.assert_called_once_with(2)
 
     async def test_get_by_ids_skips_database_for_empty_input(self) -> None:

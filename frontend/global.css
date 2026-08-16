@@ -63,7 +63,7 @@
     }
 
     .page-content {
-        @apply flex-1 px-6 py-5;
+        @apply flex-1 px-3;
     }
 
     .content-normal {
@@ -71,6 +71,9 @@
     }
     .content-spec {
         @apply pt-3 pb-3;
+    }
+    .content-outside {
+        @apply mt-2 mb-2;
     }
 
     /*===============================================================*/
@@ -105,12 +108,16 @@
         @apply p-3 border rounded-card  border-border-brand;
     }
     .card-name {
-        @apply text-card-name font-sans-spec36;
+        @apply text-card-name font-sans-spec36 mt-1 mb-1;
     }
     .card-price {
         @apply text-card-price font-sans-bold;
     }
     .card-des {
-        @apply text-card-des font-sans-italic;
+        @apply text-card-des font-sans-regular;
+    }
+
+    .card-map {
+        @apply border rounded-card  border-border-brand;
     }
 }

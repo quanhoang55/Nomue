@@ -9,8 +9,8 @@ export default function Profile() {
   // Main
   // ===========================================================
   return (
-    <View className="page-view">
-      <GradientBackground />
+    <View className="page-view bg-background">
+      {/*<GradientBackground />*/}
       <SafeAreaView style={{ flex: 1 }}>
         <View className="page-content">
           <Text className="text-7xl font-sans-spec36 color-foreground">

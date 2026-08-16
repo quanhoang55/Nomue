@@ -56,6 +56,36 @@ Invalid UUID parameters return FastAPI's standard `422` validation response.
 
 ## Locations
 
+### `POST /locations/resolve`
+
+Resolves exactly one input mode: location text or GPS coordinates.
+
+```json
+{ "text": "Vinh, Nghệ An" }
+```
+
+```json
+{ "latitude": 18.6796, "longitude": 105.6813 }
+```
+
+Response:
+
+```json
+{
+  "province": { "id": "uuid", "name": "Nghệ An" },
+  "local_area": {
+    "id": "uuid",
+    "province_id": "uuid",
+    "name": "Vinh",
+    "area_type": "Thành phố",
+    "latitude": 18.6796,
+    "longitude": 105.6813
+  }
+}
+```
+
+`local_area` is nullable when text identifies only a province. Data comes from Supabase `province` and `local_area`; matching and distance calculations run locally in the backend. GPS matches beyond `LOCATION_MAX_MATCH_DISTANCE_KM` (default `75`) are rejected. No Google, Gemini, or geocoding client is used. Unknown locations return `404`, while mixed or incomplete input returns `422`.
+
 ### `GET /locations/{province_id}/dish-ids`
 
 Returns the deterministically ordered dish UUIDs related to a province.

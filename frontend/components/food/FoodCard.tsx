@@ -30,27 +30,35 @@ function findLocation(id: string) {
 // ===========================================================
 export function FoodCard({ item }: { item: FoodCardType }) {
   return (
-    <View className="w-full max-h-110 min-h-80 h-85 card-normal bg-i-orange">
+    <View className="w-full max-h-150 min-h-80 h-100 card-normal bg-i-orange">
       {item.image ? (
         <Image
           source={{ uri: item.image }}
           className="w-full h-40 card-normal bg-white"
         />
       ) : (
-        <View className="w-full h-40 card-normal bg-white items-center justify-center">
+        <View className="w-full h-[40%] card-normal bg-white items-center justify-center">
           <Text className="text-box">Image coming soon</Text>
         </View>
       )}
-      <Text className="card-name">{item.name}</Text>
-      <Text className="card-price">{item.price}</Text>
-      <Text className="card-des">{item.description}</Text>
+      <View className="h-[15%]">
+        <Text className="card-name">{item.name}</Text>
+      </View>
+      <View className="h-[10%]">
+        <Text className="card-price">{item.price}</Text>
+      </View>
+      <View className="h-[25%]">
+        <Text className="card-des">{item.description}</Text>
+      </View>
 
-      <Pressable
-        className="box-normal items-center bg-white"
-        onPress={() => findLocation(item.id)}
-      >
-        <Text>Location</Text>
-      </Pressable>
+      <View className="h-[10%]">
+        <Pressable
+          className="box-normal items-center bg-white"
+          onPress={() => findLocation(item.id)}
+        >
+          <Text>Location</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }

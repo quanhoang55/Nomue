@@ -4,7 +4,7 @@
 from typing import Self
 from uuid import UUID
 
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator, model_validator
 
 from app.schemas.common import RequestModel, ResponseModel
 
@@ -36,9 +36,19 @@ class LocalAreaResponse(ResponseModel):
 
 
 class LocationResolveRequest(RequestModel):
-    text: str | None = Field(default=None, min_length=1)
+    text: str | None = Field(default=None, min_length=1, max_length=200)
     latitude: float | None = Field(default=None, ge=-90, le=90)
     longitude: float | None = Field(default=None, ge=-180, le=180)
+
+    @field_validator("text")
+    @classmethod
+    def normalize_text_input(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("text must not be blank")
+        return normalized
 
     @model_validator(mode="after")
     def validate_resolution_method(self) -> Self:
