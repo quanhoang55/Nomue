@@ -17,6 +17,7 @@ from app.prompts.chat_prompt import (
     CHAT_SYSTEM_INSTRUCTION,
     LOCATION_SYSTEM_INSTRUCTION,
     MAPS_SYSTEM_INSTRUCTION,
+    RESTAURANT_DISCOVERY_SYSTEM_INSTRUCTION,
 )
 from app.schemas.chat_schema import (
     ChatGeminiResponse,
@@ -25,6 +26,7 @@ from app.schemas.chat_schema import (
     MapsGroundingContext,
     MapsGroundingSource,
 )
+from app.schemas.restaurant import GeminiRestaurantDiscovery
 
 # ==========================================================================
 # PARAMETERS
@@ -59,6 +61,13 @@ class IGeminiClient(ABC):
         self,
         input_text: str,
     ) -> ChatGeminiResponse:
+        pass
+
+    @abstractmethod
+    async def generate_structured_restaurants(
+        self,
+        input_text: str,
+    ) -> GeminiRestaurantDiscovery:
         pass
 
 
@@ -203,6 +212,49 @@ class GeminiClient(IGeminiClient):
             )
             raise GeminiError(
                 "The recommendation service returned an invalid response"
+            ) from exc
+
+    # ======================================================================
+    # Function: Generate Strict JSON for Grounded Restaurant Discovery
+    # ======================================================================
+    async def generate_structured_restaurants(
+        self,
+        input_text: str,
+    ) -> GeminiRestaurantDiscovery:
+        request: dict[str, Any] = {
+            "model": self.model,
+            "input": input_text,
+            "store": False,
+            "system_instruction": RESTAURANT_DISCOVERY_SYSTEM_INSTRUCTION,
+            "response_format": {
+                "type": "text",
+                "mime_type": "application/json",
+                "schema": GeminiRestaurantDiscovery.model_json_schema(),
+            },
+            "generation_config": {
+                "max_output_tokens": 2_048,
+                "thinking_level": "low",
+            },
+            "timeout": self.timeout_seconds,
+        }
+        interaction = await self._create_interaction(
+            request,
+            operation="structured restaurant discovery",
+        )
+
+        output_text = interaction.output_text
+        if not isinstance(output_text, str) or not output_text.strip():
+            raise GeminiError("The restaurant discovery service returned no response")
+
+        try:
+            return GeminiRestaurantDiscovery.model_validate_json(output_text)
+        except ValidationError as exc:
+            logger.warning(
+                "Gemini returned invalid restaurant discovery output: %d validation errors",
+                exc.error_count(),
+            )
+            raise GeminiError(
+                "The restaurant discovery service returned an invalid response"
             ) from exc
 
     # ======================================================================

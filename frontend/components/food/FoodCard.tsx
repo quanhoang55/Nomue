@@ -24,7 +24,7 @@ export type FoodCardType = {
 // Function
 // ===========================================================
 
-function findLocation(id: string) {
+function checkFood(id: string) {
   router.push({
     pathname: "/locations/[dishId]",
     params: {
@@ -67,19 +67,16 @@ export function FoodCard({ item }: { item: FoodCardType }) {
       <View className="h-[15%]">
         <Text className="card-name">{item.name}</Text>
       </View>
-      <View className="h-[10%]">
-        <Text className="card-price">{item.price}</Text>
-      </View>
-      <View className="h-[25%]">
+      <View className="h-[35%]">
         <Text className="card-des">{item.description}</Text>
       </View>
 
       <View className="h-[10%]">
         <Pressable
           className="box-normal items-center bg-white"
-          onPress={() => findLocation(item.id)}
+          onPress={() => checkFood(item.id)}
         >
-          <Text>Location</Text>
+          <Text className="text-small">Check The Food</Text>
         </Pressable>
       </View>
     </View>

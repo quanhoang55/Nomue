@@ -32,11 +32,13 @@ const IconType = {
 export interface DishLocation {
   latitude: number;
   longitude: number;
+  name?: string;
+  description?: string | null;
 }
 
 export interface MapScreenProps {
-  user_latitude: number;
-  user_longitude: number;
+  user_latitude: number | null;
+  user_longitude: number | null;
   dish_locations: DishLocation[] | null;
 }
 
@@ -46,6 +48,8 @@ export interface MapScreenProps {
 const OPEN_STREET_MAP_TILES = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 const OPEN_STREET_MAP_COPYRIGHT = "https://www.openstreetmap.org/copyright";
 const REGION_DELTA = 0.015;
+const DEFAULT_LATITUDE = 16.0471;
+const DEFAULT_LONGITUDE = 108.2068;
 
 // ===========================================================
 // Create Region
@@ -78,18 +82,41 @@ export function MapScreen({
   // ===========================================================
   const latitude = location_info.user_latitude;
   const longitude = location_info.user_longitude;
-  const dishLocations = location_info.dish_locations ?? [];
+  const dishLocations = useMemo(
+    () => location_info.dish_locations ?? [],
+    [location_info.dish_locations],
+  );
+  const hasUserLocation = latitude !== null && longitude !== null;
+  const mapCenter = hasUserLocation
+    ? { latitude, longitude }
+    : (dishLocations[0] ?? {
+        latitude: DEFAULT_LATITUDE,
+        longitude: DEFAULT_LONGITUDE,
+      });
 
   const region = useMemo(
-    () => createRegion(latitude, longitude),
-    [latitude, longitude],
+    () => createRegion(mapCenter.latitude, mapCenter.longitude),
+    [mapCenter.latitude, mapCenter.longitude],
   );
 
   const centerMap = useCallback(
     (animated = true) => {
+      const coordinates = [
+        ...(hasUserLocation ? [{ latitude, longitude }] : []),
+        ...dishLocations,
+      ];
+
+      if (coordinates.length > 1) {
+        mapRef.current?.fitToCoordinates(coordinates, {
+          animated,
+          edgePadding: { top: 70, right: 50, bottom: 70, left: 50 },
+        });
+        return;
+      }
+
       mapRef.current?.animateToRegion(region, animated ? 450 : 0);
     },
-    [region],
+    [dishLocations, hasUserLocation, latitude, longitude, region],
   );
 
   useEffect(() => {
@@ -130,32 +157,34 @@ export function MapScreen({
           shouldReplaceMapContent
         />
 
-        <Marker
-          coordinate={{ latitude, longitude }}
-          anchor={{ x: 0.5, y: 0.9 }}
-          tracksViewChanges={false}
-          accessibilityLabel="Selected location"
-        >
-          <View style={styles.marker}>
-            <View style={styles.markerPin}>
-              <Octicons
-                name={IconType[LocationType.USER_LOCATION]}
-                size={24}
-                color="black"
-              />
-            </View>
-            <View style={styles.markerPoint} />
-          </View>
-
-          <Callout tooltip>
-            <View style={styles.calloutWrapper}>
-              <View style={styles.callout}>
-                <Text style={styles.calloutTitle}></Text>
+        {hasUserLocation && (
+          <Marker
+            coordinate={{ latitude, longitude }}
+            anchor={{ x: 0.5, y: 0.9 }}
+            tracksViewChanges={false}
+            accessibilityLabel="Selected location"
+          >
+            <View style={styles.marker}>
+              <View style={styles.markerPin}>
+                <Octicons
+                  name={IconType[LocationType.USER_LOCATION]}
+                  size={24}
+                  color="black"
+                />
               </View>
-              <View style={styles.calloutArrow} />
+              <View style={styles.markerPoint} />
             </View>
-          </Callout>
-        </Marker>
+
+            <Callout tooltip>
+              <View style={styles.calloutWrapper}>
+                <View style={styles.callout}>
+                  <Text style={styles.calloutTitle}>Selected location</Text>
+                </View>
+                <View style={styles.calloutArrow} />
+              </View>
+            </Callout>
+          </Marker>
+        )}
 
         {dishLocations.map((dishLocation, index) => (
           <Marker
@@ -163,7 +192,9 @@ export function MapScreen({
             coordinate={dishLocation}
             anchor={{ x: 0.5, y: 0.9 }}
             tracksViewChanges={false}
-            accessibilityLabel={`Dish location ${index + 1}`}
+            accessibilityLabel={
+              dishLocation.name ?? `Dish location ${index + 1}`
+            }
           >
             <View style={styles.marker}>
               <View style={[styles.markerPin, styles.dishMarkerPin]}>
@@ -179,10 +210,12 @@ export function MapScreen({
             <Callout tooltip>
               <View style={styles.calloutWrapper}>
                 <View style={styles.callout}>
-                  <Text style={styles.calloutTitle}>Dish location</Text>
+                  <Text style={styles.calloutTitle}>
+                    {dishLocation.name ?? "Dish location"}
+                  </Text>
                   <Text style={styles.calloutCoordinates}>
-                    {dishLocation.latitude.toFixed(5)},{" "}
-                    {dishLocation.longitude.toFixed(5)}
+                    {dishLocation.description ??
+                      `${dishLocation.latitude.toFixed(5)}, ${dishLocation.longitude.toFixed(5)}`}
                   </Text>
                 </View>
                 <View style={styles.calloutArrow} />

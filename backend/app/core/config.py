@@ -43,6 +43,7 @@ class Settings(BaseSettings):
     google_places_api_key: SecretStr | None = None
     revenuecat_api_key: SecretStr | None = None
     revenuecat_webhook_secret: SecretStr | None = None
+    system_api_key: SecretStr | None = None
 
     jwt_audience: str = Field(default="authenticated", min_length=1)
     jwt_clock_skew_seconds: int = Field(default=10, ge=0, le=60)
@@ -150,6 +151,7 @@ class Settings(BaseSettings):
             "google_places_api_key": self.google_places_api_key,
             "revenuecat_api_key": self.revenuecat_api_key,
             "revenuecat_webhook_secret": self.revenuecat_webhook_secret,
+            "system_api_key": self.system_api_key,
         }
         for name, value in optional_secrets.items():
             if value is None:

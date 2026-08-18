@@ -274,3 +274,70 @@ Unknown optional location text does not block general food chat. Invalid or
 mixed location input returns `422`. Missing Gemini configuration returns the
 safe configuration error response, while Gemini API or structured-output
 failures return the safe `502` Gemini error response.
+
+### `POST /chat/restaurants/discover`
+
+Discovers current Google Maps-grounded restaurants for one known dish near a
+text or GPS location. This endpoint is read-only and is not used by the chat
+page.
+
+```json
+{
+  "dish_id": "11111111-1111-4111-8111-111111111111",
+  "location": { "text": "Vinh, Nghệ An" }
+}
+```
+
+The response is a direct JSON list. Gemini targets 5–7 results when that many
+trustworthy matches exist, and the validated response can never contain more
+than 7. Latitude and longitude are required for every result. An empty list is
+valid.
+
+```json
+[
+  {
+    "google_place_id": "ChIJ-example-place-id",
+    "name": "Example Eel Restaurant",
+    "address": "Vinh, Nghệ An",
+    "latitude": 18.68,
+    "longitude": 105.68,
+    "rating": 4.5,
+    "google_maps_uri": "https://maps.google.com/?cid=example",
+    "reason": "Known for local eel dishes"
+  }
+]
+```
+
+Discovery uses a Maps-grounding call followed by a separate strict JSON call.
+The backend keeps only place IDs present in the Maps grounding result, removes
+duplicates, and does not persist anything automatically.
+
+## System
+
+### `POST /system/restaurant-dishes`
+
+Idempotently saves up to seven restaurant relationships in the existing
+`restaurant_dish` table. Configure `SYSTEM_API_KEY` and send it through the
+`X-System-Key` header. This endpoint stores only the Google place ID, dish ID,
+province ID, and nullable local-area ID.
+
+```json
+{
+  "dish_id": "11111111-1111-4111-8111-111111111111",
+  "province_id": "33333333-3333-4333-8333-333333333333",
+  "local_area_id": "44444444-4444-4444-8444-444444444444",
+  "google_place_ids": ["place-1", "place-2"]
+}
+```
+
+```json
+{
+  "requested_count": 2,
+  "created_count": 1,
+  "existing_count": 1,
+  "google_place_ids": ["place-1", "place-2"]
+}
+```
+
+The backend validates the dish, province, and local-area relationship before
+inserting only missing Google place IDs.

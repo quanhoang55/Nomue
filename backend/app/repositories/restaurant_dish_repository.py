@@ -30,6 +30,17 @@ RESTAURANT_DISH_SELECT_COLUMNS = (
 # ==========================================================================
 class IRestaurantDishRepository(ABC):
     @abstractmethod
+    async def insert_many(
+        self,
+        google_place_ids: list[str],
+        *,
+        dish_id: UUID,
+        province_id: UUID,
+        local_area_id: UUID | None,
+    ) -> list[RestaurantDishResponse]:
+        pass
+
+    @abstractmethod
     async def get_by_dish_id(
         self,
         dish_id: UUID,
@@ -58,6 +69,49 @@ class IRestaurantDishRepository(ABC):
 class RestaurantDishRepository(IRestaurantDishRepository):
     def __init__(self, db: AsyncClient) -> None:
         self.db = db
+
+    @override
+    async def insert_many(
+        self,
+        google_place_ids: list[str],
+        *,
+        dish_id: UUID,
+        province_id: UUID,
+        local_area_id: UUID | None,
+    ) -> list[RestaurantDishResponse]:
+        unique_place_ids = list(dict.fromkeys(google_place_ids))
+        if not unique_place_ids:
+            return []
+
+        rows = [
+            {
+                "google_place_id": place_id,
+                "dish_id": str(dish_id),
+                "province_id": str(province_id),
+                "local_area_id": (
+                    None if local_area_id is None else str(local_area_id)
+                ),
+            }
+            for place_id in unique_place_ids
+        ]
+        try:
+            response = await (
+                self.db.table("restaurant_dish").insert(rows).execute()
+            )
+            if response is None or response.data is None:
+                return []
+            return [
+                RestaurantDishResponse.model_validate(row)
+                for row in response.data
+            ]
+        except ValidationError as exc:
+            logger.exception("Invalid saved restaurant relationship data returned")
+            raise DatabaseError(
+                "The database returned invalid restaurant data"
+            ) from exc
+        except Exception as exc:
+            logger.exception("Database error while saving restaurant relationships")
+            raise DatabaseError("Could not save restaurant data") from exc
 
     @override
     async def get_by_dish_id(

@@ -33,3 +33,14 @@ when the user supplied coordinates. Do not infer a location from a dish name,
 cuisine, language, device context, or general knowledge. Return null when the
 message contains no explicit location. Return only output conforming to the
 configured schema and do not include reasoning."""
+
+
+RESTAURANT_DISCOVERY_SYSTEM_INSTRUCTION = """You are normalizing Google
+Maps-grounded restaurant results for Nomue. Use only restaurants and facts in
+the supplied MAPS_CONTEXT. Never invent a place, Google place ID, address,
+rating, link, or coordinate. Return restaurants relevant to the supplied dish
+and location. Aim for 5 to 7 useful results when that many grounded matches
+exist, never return more than 7, and return an empty list when none are
+trustworthy. Every returned restaurant must have a Google place ID, latitude,
+and longitude. Return only JSON conforming to the configured response schema;
+do not include markdown or reasoning."""
