@@ -1,39 +1,41 @@
-import { NativeTabs, Label, Icon } from "expo-router/unstable-native-tabs";
+import { NativeTabs } from "expo-router/unstable-native-tabs";
 import { COLORS } from "@/constants/colors";
+import { usePathname } from "expo-router";
 
-export default function RootLayout() {
-  // ===========================================================
-  // Main
-  // ===========================================================
+export default function TabsLayout() {
+  const pathname = usePathname();
+  const isChatTab = pathname === "/chat";
+
   return (
     <NativeTabs
       iconColor={{
         default: COLORS.foreground,
         selected: COLORS.red,
       }}
+      minimizeBehavior={isChatTab ? "onScrollDown" : "never"}
     >
       <NativeTabs.Trigger name="index">
-        <Icon
+        <NativeTabs.Trigger.Icon
           sf={{ default: "house", selected: "house.fill" }}
           drawable="custom_home_drawable"
         />
-        <Label hidden={true}>Home</Label>
+        {/*<NativeTabs.Trigger.Label hidden>Home</NativeTabs.Trigger.Label>*/}
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="chat">
-        <Icon
+        <NativeTabs.Trigger.Icon
           sf={{ default: "message", selected: "message.fill" }}
           drawable="custom_chat_drawable"
         />
-        <Label hidden={true}>Chat</Label>
+        {/*<NativeTabs.Trigger.Label hidden>Chat</NativeTabs.Trigger.Label>*/}
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="profile">
-        <Icon
+        <NativeTabs.Trigger.Icon
           sf={{ default: "person", selected: "person.fill" }}
           drawable="custom_profile_drawable"
         />
-        <Label hidden={true}>Profile</Label>
+        {/*<NativeTabs.Trigger.Label hidden>Profile</NativeTabs.Trigger.Label>*/}
       </NativeTabs.Trigger>
     </NativeTabs>
   );

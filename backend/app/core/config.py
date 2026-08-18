@@ -34,6 +34,12 @@ class Settings(BaseSettings):
     supabase_secret_key: SecretStr
 
     gemini_api_key: SecretStr | None = None
+    gemini_model: str = Field(
+        default="gemini-3.6-flash",
+        min_length=1,
+        max_length=100,
+    )
+    gemini_timeout_seconds: float = Field(default=60.0, gt=0, le=180)
     google_places_api_key: SecretStr | None = None
     revenuecat_api_key: SecretStr | None = None
     revenuecat_webhook_secret: SecretStr | None = None
@@ -86,6 +92,14 @@ class Settings(BaseSettings):
             raise ValueError("supabase_url must not contain credentials")
         if parsed.query or parsed.fragment:
             raise ValueError("supabase_url must not contain a query or fragment")
+        return normalized
+
+    @field_validator("gemini_model")
+    @classmethod
+    def normalize_gemini_model(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized or any(character.isspace() for character in normalized):
+            raise ValueError("gemini_model must be a non-empty model identifier")
         return normalized
 
     @field_validator("cors_allowed_origins")

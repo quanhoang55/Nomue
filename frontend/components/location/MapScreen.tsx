@@ -116,7 +116,7 @@ export function MapScreen({
         showsBuildings={false}
         showsCompass={false}
         showsIndoors={false}
-        showsPointsOfInterest={false}
+        showsPointsOfInterests={false}
         showsScale={false}
         showsTraffic={false}
         toolbarEnabled={false}
@@ -338,7 +338,7 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
   },
   loadingOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     alignItems: "center",
     justifyContent: "center",
     gap: 10,

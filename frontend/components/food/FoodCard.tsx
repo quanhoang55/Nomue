@@ -1,5 +1,13 @@
+import { COLORS } from "@/constants/colors";
 import { router } from "expo-router";
 import { Image, Pressable, Text, View } from "react-native";
+
+// ===========================================================
+// Food Card Accent Colors
+// ===========================================================
+const FOOD_CARD_COLORS = Object.entries(COLORS)
+  .filter(([name]) => name !== "background" && name !== "foreground")
+  .map(([, color]) => color);
 
 // ===========================================================
 // Type
@@ -26,11 +34,26 @@ function findLocation(id: string) {
 }
 
 // ===========================================================
+// Function: Select a Stable Accent Color for Each Dish
+// ===========================================================
+function getFoodCardColor(id: string) {
+  const hash = Array.from(id).reduce(
+    (value, character) => (value * 31 + character.charCodeAt(0)) >>> 0,
+    0,
+  );
+
+  return FOOD_CARD_COLORS[hash % FOOD_CARD_COLORS.length];
+}
+
+// ===========================================================
 // Main
 // ===========================================================
 export function FoodCard({ item }: { item: FoodCardType }) {
   return (
-    <View className="w-full max-h-150 min-h-80 h-100 card-normal bg-i-orange">
+    <View
+      className="w-full max-h-150 min-h-80 h-100 card-normal"
+      style={{ backgroundColor: getFoodCardColor(item.id) }}
+    >
       {item.image ? (
         <Image
           source={{ uri: item.image }}

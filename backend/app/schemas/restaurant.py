@@ -16,7 +16,7 @@ from app.schemas.common import ResponseModel
 
 class RestaurantDishResponse(ResponseModel):
     id: UUID
-    google_place_id: str
+    google_place_id: str = Field(min_length=1, max_length=255)
     dish_id: UUID
     province_id: UUID
     local_area_id: UUID | None = None

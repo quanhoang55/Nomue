@@ -214,8 +214,20 @@ class LocationServiceTests(IsolatedAsyncioTestCase):
             )
         area_repo.list_for_province.assert_not_awaited()
 
-    async def test_province_only_text_returns_nullable_local_area(self) -> None:
-        service, _area_repo, _province_repo = make_location_service()
+    async def test_province_only_text_uses_first_local_area(self) -> None:
+        service, area_repo, _province_repo = make_location_service()
+
+        result = await service.resolve(LocationResolveRequest(text="Nghệ An"))
+
+        self.assertEqual(result.province.name, "Nghệ An")
+        self.assertEqual(result.local_area, make_area())
+        self.assertEqual(result.local_area.latitude, 18.6796)
+        self.assertEqual(result.local_area.longitude, 105.6813)
+        area_repo.list_for_province.assert_awaited_once_with(PROVINCE_ID)
+
+    async def test_province_without_local_areas_keeps_nullable_area(self) -> None:
+        service, area_repo, _province_repo = make_location_service()
+        area_repo.list_for_province.return_value = []
 
         result = await service.resolve(LocationResolveRequest(text="Nghệ An"))
 

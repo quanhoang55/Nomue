@@ -795,7 +795,7 @@ The backend does **not** need an OSM API dependency merely to return known pins 
 
 ```text
 Supabase
-frontend OSM map implementation
+frontend OSM map implementation (Already)
 ```
 
 No Google Places key required yet if only stored restaurant/location data is used.
@@ -924,19 +924,46 @@ Frontend uses restaurant coordinates for OSM map pins.
 
 Do not implement this stage until `GEMINI_API_KEY` is available.
 
-Google Places is optional depending on which chat tools are enabled.
+Use the configurable `GEMINI_MODEL`. The current default is
+`gemini-3.6-flash` because the Gemini API no longer makes
+`gemini-2.5-flash` available to new users.
+
+Gemini uses the separate `GEMINI_TIMEOUT_SECONDS` setting, which defaults to
+`60` seconds because grounded and structured interactions can exceed the
+shorter timeout used for ordinary backend requests.
+
+Stage 5 uses `thinking_level="low"` because responses are concise mobile
+recommendations and do not require long-form model reasoning.
+
+Google Maps grounding is optional and should only be enabled when the request needs nearby/current place information.
 
 ## Goal
 
-A chat response should support the planned UI:
+Build the backend flow:
 
 ```text
-AI reply text
-OSM map with restaurant pins
-FoodCards below the map
+POST /api/v1/chat
+        ↓
+chat_orchestrator
+        ↓
+location + relevant dish data
+        ↓
+BACKEND_CONTEXT
+        ↓
+gemini_service
+        ↓
+gemini_client
+        ↓
+Gemini + optional Google Maps grounding
+        ↓
+structured Pydantic response
 ```
 
-Recommended response concept:
+Do not modify the frontend in this stage. Only prepare the API response for later frontend integration.
+
+## Response
+
+The chat response should support the planned UI:
 
 ```text
 ChatResponse
@@ -947,78 +974,175 @@ ChatResponse
 └── explanation
 ```
 
-Do not expose internal model chain-of-thought/reasoning.
-
-Use a concise user-facing `explanation` if needed.
-
-## Why keep both dishes and restaurants?
-
-Do not force the frontend to infer recommended dishes from `google_place_id`.
-
-Use:
+Use `recommended_dishes` later for:
 
 ```text
-recommended_dishes
-→ FoodCards
-
-recommended_restaurants
-→ map pins
+FoodCards
 ```
 
-Restaurant models may contain `dish_ids` to connect pins back to recommended dishes when useful.
-
-## Client
-
-### `gemini_client.py`
-
-Owns:
+Use `recommended_restaurants` later for:
 
 ```text
-Gemini HTTP/SDK protocol
+MapView
+```
+
+Restaurant models may contain `dish_ids` when useful for connecting restaurant pins to recommended dishes.
+
+Do not expose model chain-of-thought or internal reasoning.
+
+`explanation` must only contain a short user-facing explanation.
+
+## Request
+
+Support:
+
+```text
+message
+optional location text
+optional GPS latitude
+optional GPS longitude
+```
+
+Location may come from user GPS or from the existing location resolver.
+
+## BACKEND_CONTEXT
+
+Do not send only the user message to Gemini.
+
+Build compact context from backend data:
+
+```python
+context = {
+    "location": ...,
+    "candidate_dishes": ...,
+    "user_preferences": ...,
+}
+```
+
+Then:
+
+```python
+input_text = f"""
+BACKEND_CONTEXT:
+{json.dumps(context, ensure_ascii=False)}
+
+USER_MESSAGE:
+{user_message}
+"""
+```
+
+Only retrieve dishes relevant to the resolved location. Never send the complete dish database.
+
+`user_preferences` is optional for now because user preference functionality is not implemented yet.
+
+## `gemini_client.py`
+
+Owns only Gemini SDK/API communication:
+
+```text
+Gemini client initialization
+model configuration
 timeouts
-function/tool calling transport
-structured-output transport details
-third-party errors
+system instruction transport
+Google Maps tool transport
+structured-output transport
+Gemini API errors
 ```
 
-It does not query Supabase directly.
+It must not query Supabase or contain application business logic.
 
-## Service
+Use the existing `GEMINI_API_KEY` configuration.
 
-### `gemini_service.py`
+## `gemini_service.py`
 
-Owns:
+Owns Gemini-facing application logic:
 
 ```text
-prompt construction
-structured response validation
+system prompt
+prompt/input construction
+BACKEND_CONTEXT serialization
+structured response schema
+Pydantic validation
 model output parsing
-model-facing context
 ```
 
-## Orchestrator
+Gemini structured output must use a Pydantic schema, conceptually:
 
-### `chat_orchestrator.py`
+```python
+response_format={
+    "type": "text",
+    "mime_type": "application/json",
+    "schema": ChatGeminiResponse.model_json_schema(),
+}
+```
 
-Owns:
+Keep permanent system instructions separate from dynamic `BACKEND_CONTEXT`.
+
+## `chat_orchestrator.py`
+
+Owns the complete chat workflow:
+
+```text
+request
+↓
+location service
+↓
+dish service
+↓
+optional user preference service later
+↓
+build application context
+↓
+gemini_service
+↓
+ChatResponse
+```
+
+The orchestrator may coordinate:
 
 ```text
 Gemini
-+
 dish service
-+
 location service
-+
 restaurant service
-+
-tool handlers
+Gemini tool handlers
 ```
 
-## Gemini tools
+It must reuse existing services/repositories rather than querying Supabase directly.
+
+## Google Maps Grounding
+
+When coordinates are available and nearby/current restaurant information is needed, enable Gemini Google Maps grounding:
+
+```python
+tools=[
+    {
+        "type": "google_maps",
+        "latitude": latitude,
+        "longitude": longitude,
+    }
+]
+```
+
+Coordinates must come from:
+
+```text
+GPS
+or
+resolved text location
+```
+
+Never hard-code them.
+
+Requests that do not require current place information should not unnecessarily use Maps grounding.
+
+If Maps grounding is unavailable, normal food-oriented chat should still work when enough backend context exists.
+
+## Gemini Tools
 
 ### `tool_schemas.py`
 
-Controlled tool schemas, for example:
+Defines only controlled tool contracts, for example:
 
 ```text
 search_dishes
@@ -1027,42 +1151,127 @@ get_place_details
 get_user_preferences
 ```
 
+Only implement tools actually required by Stage 5.
+
 ### `tool_registry.py`
 
-Maps tool name to allowed handler.
+Maps approved Gemini tool names to approved handlers.
 
 ### `tool_handlers.py`
 
-Handlers call services. They must never directly query Supabase.
-
-Bad:
-
-```text
-Gemini tool
-→ Supabase
-```
+Handlers call application services.
 
 Correct:
 
 ```text
 Gemini tool
+→ handler
 → service
 → repository/client
 ```
 
-## Security rule
+Never:
 
-Gemini must never receive unrestricted database write capability.
+```text
+Gemini tool
+→ Supabase directly
+```
 
-Normal user chat must not have arbitrary insert/update/delete/SQL tools.
+## Security
 
-Any future administrative data-maintenance tool must be a separate privileged feature with explicit authorization.
+Gemini must never receive unrestricted database access.
+
+Do not expose:
+
+```text
+arbitrary SQL
+insert
+update
+delete
+administrative database operations
+```
+
+through normal user chat tools.
+
+Any future administrative AI capability must be separate and explicitly authorized.
+
+## Efficiency
+
+For Stage 5:
+
+- use the configured Gemini model (`gemini-3.6-flash` by default);
+- send only relevant dishes;
+- keep `BACKEND_CONTEXT` compact;
+- keep system instructions concise;
+- avoid unnecessary Maps grounding;
+- avoid unnecessary Gemini calls;
+- preserve async/non-blocking behavior where supported;
+- do not add Semantic Router;
+- do not add semantic caching;
+- do not add vector databases or RAG frameworks;
+- do not add prompt-compression infrastructure yet.
 
 ## Endpoint
 
 ```http
 POST /api/v1/chat
 ```
+
+Keep the endpoint thin:
+
+```text
+validate request
+→ call chat_orchestrator
+→ return ChatResponse
+```
+
+Do not place Gemini, Maps, or Supabase orchestration directly inside the endpoint.
+
+## Documentation
+
+After implementation, update:
+
+```text
+docs/endpoints.md
+```
+
+Document the chat endpoint with:
+
+- endpoint path and method;
+- purpose;
+- request fields;
+- optional text/GPS location;
+- response fields;
+- example request;
+- example response;
+- relevant errors.
+
+Also briefly document the flow:
+
+```text
+POST /api/v1/chat
+→ chat_orchestrator
+→ location/dish services
+→ BACKEND_CONTEXT
+→ Gemini
+→ optional Google Maps grounding
+→ structured response
+```
+
+Do not mention Semantic Router because it is not part of the architecture.
+
+## Scope
+
+Do not:
+
+- modify frontend code;
+- implement user preference persistence yet;
+- implement subscription-based model switching yet;
+- implement conversation memory yet;
+- redesign unrelated backend architecture;
+- duplicate existing schemas/services/repositories.
+
+Reuse existing location, dish, restaurant, and common schemas/services whenever possible.
 
 ---
 

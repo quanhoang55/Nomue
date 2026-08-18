@@ -88,7 +88,12 @@ class LocationService:
         province = best_location_name_match(components[0], provinces)
 
         if province is not None:
-            return ResolvedLocation(province=province, local_area=None)
+            areas = await self.local_area_repo.list_for_province(province.id)
+            fallback_area = areas[0] if areas else None
+            return ResolvedLocation(
+                province=province,
+                local_area=fallback_area,
+            )
 
         areas = await self.local_area_repo.list_candidates()
         local_area = best_location_name_match(components[0], areas)

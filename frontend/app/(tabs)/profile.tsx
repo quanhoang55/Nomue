@@ -2,7 +2,6 @@ import "@/global.css";
 import { router } from "expo-router";
 import { Text, View, Button } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { GradientBackground } from "@/components/ui/GradientBackground";
 
 export default function Profile() {
   // ===========================================================

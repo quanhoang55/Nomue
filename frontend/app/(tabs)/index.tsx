@@ -2,6 +2,7 @@ import "@/global.css";
 import {
   ActivityIndicator,
   Pressable,
+  ScrollView,
   Text,
   TextInput,
   View,
@@ -21,6 +22,7 @@ import {
   MapScreen,
   type MapScreenProps,
 } from "@/components/location/MapScreen";
+import { useLocationSelection } from "@/providers/LocationProvider";
 
 // ====================================================================================
 // Initial Stage 2 Location
@@ -160,12 +162,54 @@ function DishList({
   );
 }
 
+type MainBodyProps = {
+  locationInfo: MapScreenProps;
+  cards: FoodCardType[];
+  isLoading: boolean;
+  error: string | null;
+  locationName: string;
+  onRetry: () => void;
+};
+
+function MainBody({
+  locationInfo,
+  cards,
+  isLoading,
+  error,
+  locationName,
+  onRetry,
+}: MainBodyProps) {
+  return (
+    <View className="content-outside content-spec h-300">
+      <View className="w-[80%]">
+        <Text className="text-heading">Hungry?</Text>
+        <Text className="text-heading">Let’s Fix That.</Text>
+      </View>
+      <View className="content-outside w-full h-60">
+        <MapScreen location_info={locationInfo} />
+      </View>
+      <View className="content-outside">
+        <DishList
+          cards={cards}
+          isLoading={isLoading}
+          error={error}
+          locationName={locationName}
+          onRetry={onRetry}
+        />
+      </View>
+    </View>
+  );
+}
+
 export default function MainPage() {
+  const { selectLocation } = useLocationSelection();
   const [locationText, setLocationText] = useState(DEFAULT_LOCATION_TEXT);
   const [locationName, setLocationName] = useState(DEFAULT_LOCATION_TEXT);
   const [lastRequest, setLastRequest] = useState<LocationResolveRequest>(
     DEFAULT_LOCATION_REQUEST,
   );
+  const [lastRequestSelectsForChat, setLastRequestSelectsForChat] =
+    useState(false);
   const [cards, setCards] = useState<FoodCardType[]>([]);
   const [userCoordinates, setUserCoordinates] = useState(
     DEFAULT_MAP_COORDINATES,
@@ -176,52 +220,63 @@ export default function MainPage() {
   // ===========================================================
   // Load Location
   // ===========================================================
-  const loadLocation = useCallback(async (request: LocationResolveRequest) => {
-    setLastRequest(request);
-    setIsLoading(true);
-    setError(null);
-    try {
-      const resolved = await resolveLocation(request);
-      const dishes = await getDishes(resolved.province.id);
-      const resolvedName = resolved.local_area
-        ? `${resolved.local_area.name}, ${resolved.province.name}`
-        : resolved.province.name;
-      const requestCoordinates =
-        request.latitude !== undefined && request.longitude !== undefined
-          ? { latitude: request.latitude, longitude: request.longitude }
-          : null;
-      const resolvedCoordinates = requestCoordinates ?? resolved.local_area;
+  const loadLocation = useCallback(
+    async (request: LocationResolveRequest, selectForChat = false) => {
+      setLastRequest(request);
+      setLastRequestSelectsForChat(selectForChat);
+      setIsLoading(true);
+      setError(null);
+      try {
+        const resolved = await resolveLocation(request);
+        const resolvedName = resolved.local_area
+          ? `${resolved.local_area.name}, ${resolved.province.name}`
+          : resolved.province.name;
+        const requestCoordinates =
+          request.latitude !== undefined && request.longitude !== undefined
+            ? { latitude: request.latitude, longitude: request.longitude }
+            : null;
+        const resolvedCoordinates = requestCoordinates ?? resolved.local_area;
 
-      setLocationName(resolvedName);
-      setLocationText(resolvedName);
-      if (resolvedCoordinates) {
-        setUserCoordinates({
-          latitude: resolvedCoordinates.latitude,
-          longitude: resolvedCoordinates.longitude,
-        });
+        setLocationName(resolvedName);
+        setLocationText(resolvedName);
+        if (selectForChat) {
+          selectLocation(request, resolvedName);
+        }
+        const dishes = await getDishes(resolved.province.id);
+        if (resolvedCoordinates) {
+          setUserCoordinates({
+            latitude: resolvedCoordinates.latitude,
+            longitude: resolvedCoordinates.longitude,
+          });
+        }
+        setCards(
+          dishes.map((dish) => ({
+            id: dish.id,
+            name: dish.name,
+            price: vndFormatter.format(dish.typical_price),
+            description: dish.description,
+          })),
+        );
+      } catch (requestError) {
+        setCards([]);
+        setError(
+          requestError instanceof Error
+            ? requestError.message
+            : "Unable to resolve this location",
+        );
+      } finally {
+        setIsLoading(false);
       }
-      setCards(
-        dishes.map((dish) => ({
-          id: dish.id,
-          name: dish.name,
-          price: vndFormatter.format(dish.typical_price),
-          description: dish.description,
-        })),
-      );
-    } catch (requestError) {
-      setCards([]);
-      setError(
-        requestError instanceof Error
-          ? requestError.message
-          : "Unable to resolve this location",
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+    },
+    [selectLocation],
+  );
 
   useEffect(() => {
-    void loadLocation(DEFAULT_LOCATION_REQUEST);
+    const initialLoad = setTimeout(() => {
+      void loadLocation(DEFAULT_LOCATION_REQUEST);
+    }, 0);
+
+    return () => clearTimeout(initialLoad);
   }, [loadLocation]);
 
   // ===========================================================
@@ -233,7 +288,7 @@ export default function MainPage() {
       setError("Enter a city, district, or province");
       return;
     }
-    void loadLocation({ text });
+    void loadLocation({ text }, true);
   }, [loadLocation, locationText]);
 
   // ===========================================================
@@ -251,10 +306,13 @@ export default function MainPage() {
       const current = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
       });
-      await loadLocation({
-        latitude: current.coords.latitude,
-        longitude: current.coords.longitude,
-      });
+      await loadLocation(
+        {
+          latitude: current.coords.latitude,
+          longitude: current.coords.longitude,
+        },
+        true,
+      );
     } catch (locationError) {
       setCards([]);
       setError(
@@ -277,26 +335,6 @@ export default function MainPage() {
       // { latitude: 18.67, longitude: 105.68 },
     ],
   };
-  const MainBody = () => (
-    <View className="content-outside content-spec h-300">
-      <View className="w-[80%]">
-        <Text className="text-heading">Hungry?</Text>
-        <Text className="text-heading">Let’s Fix That.</Text>
-      </View>
-      <View className="content-outside w-full h-60">
-        <MapScreen location_info={locationInfo} />
-      </View>
-      <View className="content-outside">
-        <DishList
-          cards={cards}
-          isLoading={isLoading}
-          error={error}
-          locationName={locationName}
-          onRetry={() => void loadLocation(lastRequest)}
-        />
-      </View>
-    </View>
-  );
   // ===========================================================
   // Main
   // ===========================================================
@@ -304,19 +342,34 @@ export default function MainPage() {
     <View className="page-view bg-background">
       {/*<GradientBackground />*/}
       <SafeAreaView style={{ flex: 1 }} edges={["top", "left", "right"]}>
-        <View className="page-content">
-          <View className="content-outside flex-row justify-between">
-            <LocationSearch
-              value={locationText}
-              disabled={isLoading}
-              onChange={setLocationText}
-              onSearch={searchTextLocation}
-              onUseGps={() => void handleCurrentLocation()}
-            />
-            <Avatar />
-          </View>
-          <LegendList ListHeaderComponent={MainBody} estimatedItemSize={50} />
+        <View className="flex-row items-center justify-between border-b border-foreground bg-background px-4 py-3">
+          <LocationSearch
+            value={locationText}
+            disabled={isLoading}
+            onChange={setLocationText}
+            onSearch={searchTextLocation}
+            onUseGps={() => void handleCurrentLocation()}
+          />
+          <Avatar />
         </View>
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 24 }}
+          keyboardDismissMode="interactive"
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <MainBody
+            locationInfo={locationInfo}
+            cards={cards}
+            isLoading={isLoading}
+            error={error}
+            locationName={locationName}
+            onRetry={() =>
+              void loadLocation(lastRequest, lastRequestSelectsForChat)
+            }
+          />
+        </ScrollView>
       </SafeAreaView>
     </View>
   );
