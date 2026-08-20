@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     overflow: "hidden",
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: COLORS.foreground,
     borderRadius: 20,
     backgroundColor: COLORS.background,

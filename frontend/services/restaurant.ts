@@ -44,7 +44,9 @@ export function getRestaurants(
     province_id: provinceId,
   });
 
-  return apiFetch<Restaurant[]>(`/restaurants?${query.toString()}`);
+  return apiFetch<Restaurant[]>(`/restaurants?${query.toString()}`, {
+    auth: "none",
+  });
 }
 
 // =========================================================================
@@ -57,6 +59,7 @@ export function discoverRestaurants(
 ): Promise<DiscoveredRestaurant[]> {
   return apiFetch<DiscoveredRestaurant[]>("/chat/restaurants/discover", {
     method: "POST",
+    auth: "required",
     body: JSON.stringify(request),
   });
 }

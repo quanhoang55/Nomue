@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 from pydantic import SecretStr, ValidationError
 
 from app.api.dependencies import (
+    get_current_user,
     get_restaurant_discovery_service,
     require_system_api_key,
 )
@@ -411,6 +412,7 @@ class RestaurantDiscoveryApiTests(TestCase):
         app.dependency_overrides[get_restaurant_discovery_service] = (
             FakeRestaurantDiscoveryService
         )
+        app.dependency_overrides[get_current_user] = lambda: object()
         app.dependency_overrides[require_system_api_key] = lambda: None
         self.client = TestClient(app)
 

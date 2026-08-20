@@ -28,6 +28,7 @@ export function resolveLocation(
 ): Promise<ResolvedLocation> {
   return apiFetch<ResolvedLocation>("/locations/resolve", {
     method: "POST",
+    auth: "none",
     body: JSON.stringify(request),
   });
 }

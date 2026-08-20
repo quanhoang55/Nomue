@@ -6,6 +6,7 @@ import {
   type MapScreenProps,
 } from "@/components/location/MapScreen";
 import { COLORS } from "@/constants/colors";
+import { useAuth } from "@/providers/AuthProvider";
 import { useLocationSelection } from "@/providers/LocationProvider";
 import {
   createChatResponse,
@@ -17,6 +18,7 @@ import {
 } from "@/services/chat";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
+import { Redirect } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -473,7 +475,7 @@ function ChatComposer({
 // ==========================================================================
 // Page: Chat
 // ==========================================================================
-export default function ChatPage() {
+function AuthenticatedChatPage() {
   const { selectedLocation } = useLocationSelection();
   const [conversation, setConversation] =
     useState<ChatItem[]>(INITIAL_CONVERSATION);
@@ -667,6 +669,16 @@ export default function ChatPage() {
       </SafeAreaView>
     </View>
   );
+}
+
+export default function ChatPage() {
+  const { isLogIn } = useAuth();
+
+  if (!isLogIn) {
+    return <Redirect href="/(auth)/sign-in" />;
+  }
+
+  return <AuthenticatedChatPage />;
 }
 
 const styles = StyleSheet.create({

@@ -20,10 +20,10 @@ export type Dish = {
 // ============================================================
 
 export function getDish(dishId: string): Promise<Dish> {
-  return apiFetch<Dish>(`/dishes/${dishId}`);
+  return apiFetch<Dish>(`/dishes/${dishId}`, { auth: "none" });
 }
 
 export function getDishes(provinceId: string): Promise<Dish[]> {
   const query = new URLSearchParams({ province_id: provinceId });
-  return apiFetch<Dish[]>(`/dishes?${query.toString()}`);
+  return apiFetch<Dish[]>(`/dishes?${query.toString()}`, { auth: "none" });
 }

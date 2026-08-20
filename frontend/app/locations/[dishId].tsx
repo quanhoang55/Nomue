@@ -1,5 +1,6 @@
 import { MapScreen } from "@/components/location/MapScreen";
 import { COLORS } from "@/constants/colors";
+import { useAuth } from "@/providers/AuthProvider";
 import { useLocationSelection } from "@/providers/LocationProvider";
 import { getDish, type Dish } from "@/services/dish";
 import type { LocationResolveRequest } from "@/services/location";
@@ -212,14 +213,14 @@ export default function LocationPage() {
     ? params.dishId[0]
     : params.dishId;
   const { selectedLocation } = useLocationSelection();
+  const { isLogIn } = useAuth();
 
   const [dish, setDish] = useState<Dish | null>(null);
   const [isDishLoading, setIsDishLoading] = useState(true);
   const [dishError, setDishError] = useState<string | null>(null);
   const [dishRequestKey, setDishRequestKey] = useState(0);
   const [restaurants, setRestaurants] = useState<DiscoveredRestaurant[]>([]);
-  const [discoveryState, setDiscoveryState] =
-    useState<DiscoveryState>("idle");
+  const [discoveryState, setDiscoveryState] = useState<DiscoveryState>("idle");
   const [discoveryOrigin, setDiscoveryOrigin] =
     useState<DiscoveryLocation["mapOrigin"]>(null);
 
@@ -319,6 +320,10 @@ export default function LocationPage() {
     if (!dishId || discoveryState === "loading") {
       return;
     }
+    if (!isLogIn) {
+      router.push("/(auth)/sign-in");
+      return;
+    }
 
     setDiscoveryState("loading");
     setRestaurants([]);
@@ -326,6 +331,7 @@ export default function LocationPage() {
 
     try {
       const location = await prepareDiscoveryLocation();
+
       const request = { dish_id: dishId, location: location.request };
 
       if (__DEV__) {
@@ -352,7 +358,7 @@ export default function LocationPage() {
       }
       setDiscoveryState("error");
     }
-  }, [dishId, discoveryState, prepareDiscoveryLocation]);
+  }, [dishId, discoveryState, isLogIn, prepareDiscoveryLocation]);
 
   return (
     <SafeAreaView className="flex-1 bg-background">
@@ -416,8 +422,7 @@ export default function LocationPage() {
               </Text>
             </Pressable>
 
-            {(discoveryState === "empty" ||
-              discoveryState === "error") && (
+            {(discoveryState === "empty" || discoveryState === "error") && (
               <View className="mt-3 rounded-2xl border border-foreground bg-i-yellow p-4">
                 <Text className="text-center font-sans-bold text-base text-foreground">
                   Can&apos;t search any nearby restaurants right now.

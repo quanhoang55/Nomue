@@ -6,26 +6,51 @@
 from hmac import compare_digest
 from typing import Annotated
 
-from fastapi import Header
+from fastapi import Depends, Header
 
 from app.clients.gemini_client import get_gemini_client
 from app.clients.supabase_client import get_supabase
 from app.core.config import settings
 from app.core.exceptions import AuthenticationError, ConfigurationError
+from app.core.security import (
+    AuthenticatedUser,
+    extract_bearer_token,
+    verify_access_token,
+)
 from app.repositories.dish_province_repository import DishProvinceRepository
 from app.repositories.dish_repository import DishRepository
 from app.repositories.local_area_repository import LocalAreaRepository
 from app.repositories.province_repository import ProvinceRepository
 from app.repositories.restaurant_dish_repository import RestaurantDishRepository
+from app.repositories.user_repository import UserRepository
+from app.services.auth_service import AuthService
 from app.services.chat_service import ChatService
 from app.services.dish_service import DishService
 from app.services.location_service import LocationService
-from app.services.restaurant_service import RestaurantService
 from app.services.restaurant_discovery_service import RestaurantDiscoveryService
+from app.services.restaurant_service import RestaurantService
 
 # ==========================================================================
 # CORE LOGIC & FUNCTIONS
 # ==========================================================================
+
+
+async def get_current_user(
+    authorization: Annotated[
+        str | None,
+        Header(alias="Authorization"),
+    ] = None,
+) -> AuthenticatedUser:
+    token = extract_bearer_token(authorization)
+    return await verify_access_token(token)
+
+
+CurrentUserDep = Annotated[AuthenticatedUser, Depends(get_current_user)]
+
+
+async def get_auth_service() -> AuthService:
+    db = await get_supabase()
+    return AuthService(user_repo=UserRepository(db))
 
 
 async def get_dish_service() -> DishService:

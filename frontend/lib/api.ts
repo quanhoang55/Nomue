@@ -1,3 +1,5 @@
+import { supabase } from "@/lib/supabase";
+
 // ============================================================
 // BACKEND ENDPOINT
 // ============================================================
@@ -21,34 +23,70 @@ export class ApiError extends Error {
   }
 }
 
+export type ApiAuthMode = "none" | "optional" | "required";
+
+export type ApiFetchOptions = RequestInit & {
+  auth?: ApiAuthMode;
+};
+
+async function getErrorMessage(response: Response): Promise<string> {
+  try {
+    const payload = (await response.json()) as { detail?: unknown };
+    return typeof payload.detail === "string"
+      ? payload.detail
+      : `Request failed with status ${response.status}`;
+  } catch {
+    return `Request failed with status ${response.status}`;
+  }
+}
+
 // ============================================================
 // Function Fetch API
 // ============================================================
 export async function apiFetch<T>(
   path: string,
-  options: RequestInit = {},
+  options: ApiFetchOptions = {},
 ): Promise<T> {
   const url = `${API_BASE_URL}${path}`;
+  const { auth = "none", ...requestOptions } = options;
+  const sessionResult =
+    auth === "none" ? null : await supabase.auth.getSession();
+  const session = sessionResult?.data.session ?? null;
 
-  console.log("API REQUEST:", url);
+  if (sessionResult?.error && auth === "required") {
+    throw new ApiError("Unable to read the authenticated session", 401);
+  }
 
-  const response = await fetch(url, {
-    ...options,
+  if (auth === "required" && !session) {
+    throw new ApiError("Authentication is required", 401);
+  }
 
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-  });
+  async function send(accessToken?: string): Promise<Response> {
+    const headers = new Headers(requestOptions.headers);
+    headers.set("Accept", "application/json");
+    headers.set("Content-Type", "application/json");
+    if (accessToken && auth !== "none") {
+      headers.set("Authorization", `Bearer ${accessToken}`);
+    }
 
-  console.log("API STATUS:", response.status);
+    return fetch(url, { ...requestOptions, headers });
+  }
+
+  let response = await send(session?.access_token);
+
+  if (response.status === 401 && session && auth !== "none") {
+    const { data, error } = await supabase.auth.refreshSession();
+    if (!error && data.session) {
+      response = await send(data.session.access_token);
+    }
+  }
 
   if (!response.ok) {
-    throw new ApiError(
-      `Request failed with status ${response.status}`,
-      response.status,
-    );
+    throw new ApiError(await getErrorMessage(response), response.status);
+  }
+
+  if (response.status === 204) {
+    return undefined as T;
   }
 
   return response.json() as Promise<T>;

@@ -13,7 +13,7 @@ BEARER_SCHEME = "Bearer"
 SUPABASE_AUTHENTICATED_ROLE = "authenticated"
 SUPABASE_JWT_ALLOWED_ALGORITHMS = frozenset({"ES256", "RS256", "HS256"})
 SUPABASE_JWT_REQUIRED_CLAIMS = frozenset(
-    {"aud", "exp", "iat", "iss", "role", "session_id", "sub"}
+    {"aud", "exp", "iat", "is_anonymous", "iss", "role", "session_id", "sub"}
 )
 MAX_ACCESS_TOKEN_LENGTH = 8192
 

@@ -180,15 +180,15 @@ function MainBody({
   onRetry,
 }: MainBodyProps) {
   return (
-    <View className="content-outside content-spec h-300">
+    <View className="content-outside content-spec">
       <View className="w-[80%]">
-        <Text className="text-heading">Hungry?</Text>
-        <Text className="text-heading">Let’s Fix That.</Text>
+        <Text className="text-heading">Don&apos;t Know</Text>
+        <Text className="text-heading">What To Eat</Text>
       </View>
       <View className="content-outside w-full h-60">
         <MapScreen location_info={locationInfo} />
       </View>
-      <View className="content-outside">
+      <View className="content-outside h-110">
         <DishList
           cards={cards}
           isLoading={isLoading}

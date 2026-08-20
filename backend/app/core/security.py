@@ -47,7 +47,7 @@ class AuthenticatedUser(BaseModel):
     email: str | None = None
     phone: str | None = None
     session_id: UUID
-    is_anonymous: bool = False
+    is_anonymous: bool
     app_metadata: dict[str, Any] = Field(default_factory=dict)
     user_metadata: dict[str, Any] = Field(default_factory=dict)
 
@@ -109,6 +109,8 @@ def _validate_claims(
 
     if user.role != SUPABASE_AUTHENTICATED_ROLE:
         _reject_token("role is not permitted")
+    if user.is_anonymous:
+        _reject_token("anonymous users are not permitted")
 
     current_time = int(time.time())
     leeway = settings.jwt_clock_skew_seconds

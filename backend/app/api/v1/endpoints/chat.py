@@ -7,7 +7,11 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
-from app.api.dependencies import get_chat_service, get_restaurant_discovery_service
+from app.api.dependencies import (
+    CurrentUserDep,
+    get_chat_service,
+    get_restaurant_discovery_service,
+)
 from app.schemas.chat_schema import ChatRequest, ChatResponse
 from app.schemas.restaurant import DiscoveredRestaurant, RestaurantDiscoveryRequest
 from app.services.chat_service import ChatService
@@ -31,6 +35,7 @@ RestaurantDiscoveryServiceDep = Annotated[
 async def create_chat_response(
     request: ChatRequest,
     service: ChatServiceDep,
+    _current_user: CurrentUserDep,
 ) -> ChatResponse:
     return await service.chat(request)
 
@@ -45,5 +50,6 @@ async def create_chat_response(
 async def discover_restaurants(
     request: RestaurantDiscoveryRequest,
     service: RestaurantDiscoveryServiceDep,
+    _current_user: CurrentUserDep,
 ) -> list[DiscoveredRestaurant]:
     return await service.discover(request)

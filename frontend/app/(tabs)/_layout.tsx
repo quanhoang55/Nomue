@@ -19,7 +19,7 @@ export default function TabsLayout() {
           sf={{ default: "house", selected: "house.fill" }}
           drawable="custom_home_drawable"
         />
-        {/*<NativeTabs.Trigger.Label hidden>Home</NativeTabs.Trigger.Label>*/}
+        <NativeTabs.Trigger.Label>{""}</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="chat">
@@ -27,7 +27,7 @@ export default function TabsLayout() {
           sf={{ default: "message", selected: "message.fill" }}
           drawable="custom_chat_drawable"
         />
-        {/*<NativeTabs.Trigger.Label hidden>Chat</NativeTabs.Trigger.Label>*/}
+        <NativeTabs.Trigger.Label>{""}</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="profile">
@@ -35,7 +35,7 @@ export default function TabsLayout() {
           sf={{ default: "person", selected: "person.fill" }}
           drawable="custom_profile_drawable"
         />
-        {/*<NativeTabs.Trigger.Label hidden>Profile</NativeTabs.Trigger.Label>*/}
+        <NativeTabs.Trigger.Label>{""}</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );

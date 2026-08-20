@@ -78,6 +78,7 @@ export type ChatResponse = {
 export function createChatResponse(request: ChatRequest): Promise<ChatResponse> {
   return apiFetch<ChatResponse>("/chat", {
     method: "POST",
+    auth: "required",
     body: JSON.stringify(request),
   });
 }

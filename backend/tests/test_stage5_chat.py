@@ -6,7 +6,7 @@ from uuid import UUID
 
 from fastapi.testclient import TestClient
 
-from app.api.dependencies import get_chat_service
+from app.api.dependencies import get_chat_service, get_current_user
 from app.clients.gemini_client import GeminiClient, IGeminiClient
 from app.core.exceptions import ConfigurationError, GeminiError, NotFoundError
 from app.main import app
@@ -733,6 +733,7 @@ class ChatApiTests(TestCase):
     def setUp(self) -> None:
         self.service = FakeChatService()
         app.dependency_overrides[get_chat_service] = lambda: self.service
+        app.dependency_overrides[get_current_user] = lambda: object()
         self.client = TestClient(app)
 
     def tearDown(self) -> None:
