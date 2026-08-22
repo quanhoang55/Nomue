@@ -22,15 +22,11 @@
     /*===============================================================*/
 
     --font-sans-regular: normal-font;
-    --font-sans-italic: normal-italic;
     --font-sans-bold: normal-bold;
-    --font-sans-bold-italic: normal-bold-italic;
     --font-sans-spec: spec-font;
-    --font-sans-spec36: spec-36;
-    --font-sans-spec60: spec-60;
 
     /*Font Size*/
-    --text-heading: 45px;
+    --text-heading: 32px;
     --text-normal: 20px;
     --text-small: 15px;
     --text-box: 15px;
@@ -49,7 +45,7 @@
     --radius-card: 15px;
 
     /*Font Size*/
-    --text-card-name: 30px;
+    --text-card-name: 26px;
     --text-card-price: 22px;
     --text-card-des: 20px;
 }
@@ -80,7 +76,7 @@
     /*Text*/
     /*===============================================================*/
     .text-heading {
-        @apply font-sans-spec36 text-heading;
+        @apply font-sans-spec text-heading;
     }
     .text-normal {
         @apply font-sans-regular text-normal;
@@ -108,7 +104,7 @@
         @apply p-3 border rounded-card  border-border-brand;
     }
     .card-name {
-        @apply text-card-name font-sans-spec36 mt-1 mb-1;
+        @apply text-card-name font-sans-spec pt-2.5 mt-1 mb-1;
     }
     .card-price {
         @apply text-card-price font-sans-bold;

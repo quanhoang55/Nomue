@@ -52,8 +52,6 @@ export function getRestaurants(
 // =========================================================================
 // Function: Discover Restaurants for a Dish and Location
 // =========================================================================
-// Keep discovery behind this service boundary so a time-limited cache can be
-// added later without coupling storage concerns to the screen.
 export function discoverRestaurants(
   request: RestaurantDiscoveryRequest,
 ): Promise<DiscoveredRestaurant[]> {

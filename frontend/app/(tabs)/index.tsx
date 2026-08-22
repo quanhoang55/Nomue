@@ -1,376 +1,497 @@
 import "@/global.css";
+import { FeaturedDishCard } from "@/components/home/FeaturedDishCard";
+import { DishSection } from "@/components/home/DishSection";
+import { HomeHeader } from "@/components/home/HomeHeader";
+import { HomeMapPreview } from "@/components/home/HomeMapPreview";
+import { HomeSkeleton } from "@/components/home/HomeSkeleton";
+import { TasteContext } from "@/components/home/TasteContext";
+import { type MapScreenProps } from "@/components/location/MapScreen";
+import { COLORS } from "@/constants/colors";
+import { useLocalDishes } from "@/hooks/useLocalDishes";
+import { useLocationSelection } from "@/providers/LocationProvider";
 import {
-  ActivityIndicator,
+  resolveLocation,
+  type LocationResolveRequest,
+  type ResolvedLocation,
+} from "@/services/location";
+import { buildHomeSections } from "@/utils/homeRecommendations";
+import { Ionicons } from "@expo/vector-icons";
+import * as Location from "expo-location";
+import { router } from "expo-router";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
   Pressable,
+  RefreshControl,
   ScrollView,
+  StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
-import { LegendList } from "@legendapp/list/react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import * as Location from "expo-location";
-import { FoodCard, type FoodCardType } from "@/components/food/FoodCard";
-// import { GradientBackground } from "@/components/ui/GradientBackground";
-import { getDishes } from "@/services/dish";
-import {
-  type LocationResolveRequest,
-  resolveLocation,
-} from "@/services/location";
-import { useCallback, useEffect, useState } from "react";
-import {
-  MapScreen,
-  type MapScreenProps,
-} from "@/components/location/MapScreen";
-import { useLocationSelection } from "@/providers/LocationProvider";
 
-// ====================================================================================
-// Initial Stage 2 Location
-// ====================================================================================
 const DEFAULT_LOCATION_TEXT = "Phú Thọ";
 const DEFAULT_LOCATION_REQUEST: LocationResolveRequest = {
   text: DEFAULT_LOCATION_TEXT,
 };
-const DEFAULT_MAP_COORDINATES = {
-  latitude: 21.3227,
-  longitude: 105.4019,
-};
+const DEFAULT_MAP_COORDINATES = { latitude: 21.3227, longitude: 105.4019 };
+const HEADING_COLORS = [
+  COLORS.green,
+  COLORS.purple,
+  COLORS.red,
+  COLORS.yellow,
+  COLORS.orange,
+  COLORS.blue,
+] as const;
 
-const vndFormatter = new Intl.NumberFormat("vi-VN", {
-  style: "currency",
-  currency: "VND",
-  maximumFractionDigits: 0,
-});
+type Coordinates = { latitude: number; longitude: number };
 
-// ====================================================================================
-// MAIN UI
-// ====================================================================================
-function Avatar() {
-  return (
-    <View className="content-normal flex-row items-center justify-between pl-2">
-      <View className="flex-row items-center">
-        <View className="w-10 h-10 rounded-full box-normal bg-i-green"></View>
-      </View>
-    </View>
-  );
+function locationLabel(location: ResolvedLocation | null) {
+  if (!location) return "Choose where you’re exploring";
+  return location.local_area
+    ? `${location.local_area.name}, ${location.province.name}`
+    : location.province.name;
 }
 
-type LocationSearchProps = {
-  value: string;
-  disabled: boolean;
-  onChange: (value: string) => void;
-  onSearch: () => void;
-  onUseGps: () => void;
-};
-
-function LocationSearch({
-  value,
-  disabled,
-  onChange,
-  onSearch,
-  onUseGps,
-}: LocationSearchProps) {
-  return (
-    <View className="content-normal flex-1 flex-row items-center gap-2">
-      <TextInput
-        className="box-normal bg-white h-10 flex-1 px-3 max-w-100 min-w-50 w-20"
-        placeholder="Vinh, Nghệ An"
-        placeholderTextColor="#10101033"
-        value={value}
-        editable={!disabled}
-        onChangeText={onChange}
-        onSubmitEditing={onSearch}
-        returnKeyType="search"
-      />
-      {/*<Pressable
-        className="box-normal bg-i-blue px-3 py-2"
-        disabled={disabled}
-        onPress={onSearch}
-      >
-        <Text>Search</Text>
-      </Pressable>*/}
-      <Pressable
-        className="box-normal bg-i-yellow px-3 py-2"
-        disabled={disabled}
-        onPress={onUseGps}
-      >
-        <Text>GPS</Text>
-      </Pressable>
-    </View>
+export default function HomeScreen() {
+  const { selectedLocation, selectLocation } = useLocationSelection();
+  const initialRequest = useRef(
+    selectedLocation?.request ?? DEFAULT_LOCATION_REQUEST,
   );
-}
-
-type DishListProps = {
-  cards: FoodCardType[];
-  isLoading: boolean;
-  error: string | null;
-  locationName: string;
-  onRetry: () => void;
-};
-
-function DishList({
-  cards,
-  isLoading,
-  error,
-  locationName,
-  onRetry,
-}: DishListProps) {
-  if (isLoading) {
-    return (
-      <View className="items-center py-10">
-        <ActivityIndicator size="large" />
-        <Text className="text-box mt-3">Loading local dishes…</Text>
-      </View>
-    );
-  }
-
-  if (error) {
-    return (
-      <View className="items-center py-10">
-        <Text className="text-box text-center">{error}</Text>
-        <Pressable
-          className="button-normal bg-i-blue mt-4 px-5 py-3"
-          onPress={onRetry}
-        >
-          <Text>Try again</Text>
-        </Pressable>
-      </View>
-    );
-  }
-
-  if (cards.length === 0) {
-    return (
-      <Text className="text-box py-10">
-        No dishes found for {locationName}.
-      </Text>
-    );
-  }
-
-  return (
-    <LegendList
-      data={cards}
-      horizontal
-      keyExtractor={(item) => item.id}
-      renderItem={({ item }) => (
-        <View className="w-80">
-          <FoodCard item={item} />
-        </View>
-      )}
-      ItemSeparatorComponent={() => <View className="w-4" />}
-      showsHorizontalScrollIndicator={false}
-    />
-  );
-}
-
-type MainBodyProps = {
-  locationInfo: MapScreenProps;
-  cards: FoodCardType[];
-  isLoading: boolean;
-  error: string | null;
-  locationName: string;
-  onRetry: () => void;
-};
-
-function MainBody({
-  locationInfo,
-  cards,
-  isLoading,
-  error,
-  locationName,
-  onRetry,
-}: MainBodyProps) {
-  return (
-    <View className="content-outside content-spec">
-      <View className="w-[80%]">
-        <Text className="text-heading">Don&apos;t Know</Text>
-        <Text className="text-heading">What To Eat</Text>
-      </View>
-      <View className="content-outside w-full h-60">
-        <MapScreen location_info={locationInfo} />
-      </View>
-      <View className="content-outside h-110">
-        <DishList
-          cards={cards}
-          isLoading={isLoading}
-          error={error}
-          locationName={locationName}
-          onRetry={onRetry}
-        />
-      </View>
-    </View>
-  );
-}
-
-export default function MainPage() {
-  const { selectLocation } = useLocationSelection();
-  const [locationText, setLocationText] = useState(DEFAULT_LOCATION_TEXT);
-  const [locationName, setLocationName] = useState(DEFAULT_LOCATION_TEXT);
-  const [lastRequest, setLastRequest] = useState<LocationResolveRequest>(
-    DEFAULT_LOCATION_REQUEST,
-  );
-  const [lastRequestSelectsForChat, setLastRequestSelectsForChat] =
-    useState(false);
-  const [cards, setCards] = useState<FoodCardType[]>([]);
-  const [userCoordinates, setUserCoordinates] = useState(
+  const [resolvedLocation, setResolvedLocation] =
+    useState<ResolvedLocation | null>(null);
+  const [coordinates, setCoordinates] = useState<Coordinates | null>(
     DEFAULT_MAP_COORDINATES,
   );
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [searchValue, setSearchValue] = useState(
+    selectedLocation?.label ?? DEFAULT_LOCATION_TEXT,
+  );
+  const [editingLocation, setEditingLocation] = useState(false);
+  const [resolvingLocation, setResolvingLocation] = useState(true);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [lastRequest, setLastRequest] = useState<LocationResolveRequest>(
+    selectedLocation?.request ?? DEFAULT_LOCATION_REQUEST,
+  );
+  const [accentColor] = useState(
+    () => HEADING_COLORS[Math.floor(Math.random() * HEADING_COLORS.length)],
+  );
 
-  // ===========================================================
-  // Load Location
-  // ===========================================================
+  const provinceId = resolvedLocation?.province.id ?? null;
+  const {
+    dishes,
+    loading: dishesLoading,
+    error: dishesError,
+    refresh,
+  } = useLocalDishes(provinceId);
+  const sections = useMemo(() => buildHomeSections(dishes), [dishes]);
+
   const loadLocation = useCallback(
-    async (request: LocationResolveRequest, selectForChat = false) => {
+    async (request: LocationResolveRequest) => {
       setLastRequest(request);
-      setLastRequestSelectsForChat(selectForChat);
-      setIsLoading(true);
-      setError(null);
+      setResolvingLocation(true);
+      setLocationError(null);
+
       try {
         const resolved = await resolveLocation(request);
-        const resolvedName = resolved.local_area
-          ? `${resolved.local_area.name}, ${resolved.province.name}`
-          : resolved.province.name;
+        const label = locationLabel(resolved);
         const requestCoordinates =
           request.latitude !== undefined && request.longitude !== undefined
             ? { latitude: request.latitude, longitude: request.longitude }
             : null;
-        const resolvedCoordinates = requestCoordinates ?? resolved.local_area;
+        const fallbackCoordinates =
+          "text" in request && request.text === DEFAULT_LOCATION_TEXT
+            ? DEFAULT_MAP_COORDINATES
+            : null;
 
-        setLocationName(resolvedName);
-        setLocationText(resolvedName);
-        if (selectForChat) {
-          selectLocation(request, resolvedName);
-        }
-        const dishes = await getDishes(resolved.province.id);
-        if (resolvedCoordinates) {
-          setUserCoordinates({
-            latitude: resolvedCoordinates.latitude,
-            longitude: resolvedCoordinates.longitude,
-          });
-        }
-        setCards(
-          dishes.map((dish) => ({
-            id: dish.id,
-            name: dish.name,
-            price: vndFormatter.format(dish.typical_price),
-            description: dish.description,
-          })),
+        setResolvedLocation(resolved);
+        setCoordinates(
+          requestCoordinates ?? resolved.local_area ?? fallbackCoordinates,
         );
+        setSearchValue(label);
+        setEditingLocation(false);
+        selectLocation(request, label);
       } catch (requestError) {
-        setCards([]);
-        setError(
+        setLocationError(
           requestError instanceof Error
             ? requestError.message
-            : "Unable to resolve this location",
+            : "We couldn’t find that location.",
         );
       } finally {
-        setIsLoading(false);
+        setResolvingLocation(false);
       }
     },
     [selectLocation],
   );
 
   useEffect(() => {
-    const initialLoad = setTimeout(() => {
-      void loadLocation(DEFAULT_LOCATION_REQUEST);
-    }, 0);
-
-    return () => clearTimeout(initialLoad);
+    const request = initialRequest.current;
+    const timer = setTimeout(() => void loadLocation(request), 0);
+    return () => clearTimeout(timer);
   }, [loadLocation]);
 
-  // ===========================================================
-  // Current Location: Text Input
-  // ===========================================================
-  const searchTextLocation = useCallback(() => {
-    const text = locationText.trim();
+  const searchLocation = useCallback(() => {
+    const text = searchValue.trim();
     if (!text) {
-      setError("Enter a city, district, or province");
+      setLocationError("Enter a city, district, or province.");
       return;
     }
-    void loadLocation({ text }, true);
-  }, [loadLocation, locationText]);
+    void loadLocation({ text });
+  }, [loadLocation, searchValue]);
 
-  // ===========================================================
-  // Current Location: GPS
-  // ===========================================================
-  const handleCurrentLocation = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
+  const handleUseCurrentLocation = useCallback(async () => {
+    setResolvingLocation(true);
+    setLocationError(null);
     try {
       const permission = await Location.requestForegroundPermissionsAsync();
       if (permission.status !== Location.PermissionStatus.GRANTED) {
-        throw new Error("Location permission was denied");
+        throw new Error("Location permission was denied.");
       }
-
       const current = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
       });
-      await loadLocation(
-        {
-          latitude: current.coords.latitude,
-          longitude: current.coords.longitude,
-        },
-        true,
+      await loadLocation({
+        latitude: current.coords.latitude,
+        longitude: current.coords.longitude,
+      });
+    } catch (requestError) {
+      setLocationError(
+        requestError instanceof Error
+          ? requestError.message
+          : "We couldn’t read your current location.",
       );
-    } catch (locationError) {
-      setCards([]);
-      setError(
-        locationError instanceof Error
-          ? locationError.message
-          : "Unable to read your current location",
-      );
-      setIsLoading(false);
+      setResolvingLocation(false);
     }
   }, [loadLocation]);
 
-  // ===========================================================
-  // Body
-  // ===========================================================
-  const locationInfo: MapScreenProps = {
-    user_latitude: userCoordinates.latitude,
-    user_longitude: userCoordinates.longitude,
-    dish_locations: [
-      // { latitude: 18.68, longitude: 105.69 },
-      // { latitude: 18.67, longitude: 105.68 },
-    ],
-  };
-  // ===========================================================
-  // Main
-  // ===========================================================
+  const mapInfo: MapScreenProps = useMemo(
+    () => ({
+      user_latitude: coordinates?.latitude ?? null,
+      user_longitude: coordinates?.longitude ?? null,
+      // Dish data does not contain restaurant coordinates. Pins appear only
+      // after the existing restaurant flow returns grounded coordinates.
+      dish_locations: [],
+    }),
+    [coordinates],
+  );
+
+  const initialLoading = resolvingLocation && !resolvedLocation;
+  const contentLoading =
+    Boolean(resolvedLocation) && dishesLoading && dishes.length === 0;
+  const provinceName = resolvedLocation?.province.name ?? "Vietnam";
+  const resolvedLabel = locationLabel(resolvedLocation);
+
+  const header = (
+    <HomeHeader
+      accentColor={accentColor}
+      disabled={resolvingLocation}
+      editing={editingLocation}
+      locationLabel={resolvedLabel}
+      onCancel={() => {
+        setEditingLocation(false);
+        setSearchValue(resolvedLabel);
+        setLocationError(null);
+      }}
+      onChangeLocation={() => setEditingLocation(true)}
+      onChangeSearch={setSearchValue}
+      onSearch={searchLocation}
+      onUseGps={() => void handleUseCurrentLocation()}
+      provinceName={provinceName}
+      searchValue={searchValue}
+    />
+  );
+
   return (
-    <View className="page-view bg-background">
-      {/*<GradientBackground />*/}
-      <SafeAreaView style={{ flex: 1 }} edges={["top", "left", "right"]}>
-        <View className="flex-row items-center justify-between border-b border-foreground bg-background px-4 py-3">
-          <LocationSearch
-            value={locationText}
-            disabled={isLoading}
-            onChange={setLocationText}
-            onSearch={searchTextLocation}
-            onUseGps={() => void handleCurrentLocation()}
-          />
-          <Avatar />
-        </View>
-        <ScrollView
-          className="flex-1"
-          contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 24 }}
-          keyboardDismissMode="interactive"
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          <MainBody
-            locationInfo={locationInfo}
-            cards={cards}
-            isLoading={isLoading}
-            error={error}
-            locationName={locationName}
-            onRetry={() =>
-              void loadLocation(lastRequest, lastRequestSelectsForChat)
+    <SafeAreaView edges={["top", "left", "right"]} style={styles.safeArea}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardDismissMode="interactive"
+        keyboardShouldPersistTaps="handled"
+        refreshControl={
+          <RefreshControl
+            colors={[COLORS.red]}
+            onRefresh={() => {
+              if (resolvedLocation) refresh();
+              else void loadLocation(lastRequest);
+            }}
+            refreshing={
+              resolvingLocation || (dishesLoading && dishes.length > 0)
             }
+            tintColor={COLORS.red}
           />
-        </ScrollView>
-      </SafeAreaView>
-    </View>
+        }
+        showsVerticalScrollIndicator={false}
+      >
+        {initialLoading || contentLoading ? (
+          <HomeSkeleton />
+        ) : (
+          <>
+            {header}
+
+            {locationError ? (
+              <View style={styles.inlineError}>
+                <Ionicons
+                  name="alert-circle-outline"
+                  color={COLORS.foreground}
+                  size={20}
+                />
+                <Text style={styles.inlineErrorText}>{locationError}</Text>
+              </View>
+            ) : null}
+
+            {!resolvedLocation ? (
+              <View style={styles.locationEmpty}>
+                <View style={styles.emptyMark}>
+                  <Ionicons
+                    name="navigate-outline"
+                    color={COLORS.foreground}
+                    size={33}
+                  />
+                </View>
+                <Text style={styles.emptyTitle}>Where are you exploring?</Text>
+                <Text style={styles.emptyBody}>
+                  Choose a place to unlock its local food guide.
+                </Text>
+                <Pressable
+                  onPress={() => void handleUseCurrentLocation()}
+                  style={styles.primaryAction}
+                >
+                  <Text style={styles.primaryActionText}>Use my location</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => setEditingLocation(true)}
+                  style={styles.secondaryAction}
+                >
+                  <Text style={styles.secondaryActionText}>Choose a place</Text>
+                </Pressable>
+              </View>
+            ) : dishesError ? (
+              <View style={styles.locationEmpty}>
+                <Text style={styles.emptyTitle}>
+                  The local guide missed a turn.
+                </Text>
+                <Text style={styles.emptyBody}>{dishesError}</Text>
+                <Pressable onPress={refresh} style={styles.primaryAction}>
+                  <Text style={styles.primaryActionText}>Try again</Text>
+                </Pressable>
+              </View>
+            ) : dishes.length === 0 ? (
+              <View style={styles.locationEmpty}>
+                <Text style={styles.emptyTitle}>
+                  We’re still mapping the flavors of this area.
+                </Text>
+                <Text style={styles.emptyBody}>
+                  Try another nearby location.
+                </Text>
+                <Pressable
+                  onPress={() => setEditingLocation(true)}
+                  style={styles.primaryAction}
+                >
+                  <Text style={styles.primaryActionText}>
+                    Choose another place
+                  </Text>
+                </Pressable>
+              </View>
+            ) : (
+              <View style={styles.homeContent}>
+                {sections.featured ? (
+                  <FeaturedDishCard
+                    dish={sections.featured}
+                    province={provinceName}
+                  />
+                ) : null}
+
+                <TasteContext preferences={null} />
+
+                <DishSection
+                  dishes={sections.localEssentials}
+                  province={provinceName}
+                  subtitle={`What ${provinceName} is known for`}
+                  title="Local essentials"
+                />
+
+                <HomeMapPreview
+                  featuredDishId={sections.featured?.id}
+                  locationInfo={mapInfo}
+                />
+
+                <DishSection
+                  cardLabel="Outside your comfort zone"
+                  dishes={sections.adventurous}
+                  province={provinceName}
+                  subtitle="Try something outside your comfort zone"
+                  title="Feeling adventurous?"
+                  tone="adventurous"
+                />
+
+                <DishSection
+                  cardLabel="Local value"
+                  dishes={sections.budget}
+                  province={provinceName}
+                  subtitle="Local food that won’t break the budget"
+                  title="Good food under 100K"
+                  tone="budget"
+                />
+
+                <View style={styles.exploreMore}>
+                  <Text style={styles.exploreEyebrow}>EXPLORE MORE</Text>
+                  <Text style={styles.exploreTitle}>
+                    Still hungry for ideas?
+                  </Text>
+                  <Text style={styles.exploreBody}>
+                    Ask Nomue for a recommendation that fits your mood.
+                  </Text>
+                  <Pressable
+                    onPress={() => router.push("/(tabs)/chat")}
+                    style={({ pressed }) => [
+                      styles.exploreButton,
+                      pressed && styles.pressed,
+                    ]}
+                  >
+                    <Text style={styles.exploreButtonText}>Ask Nomue</Text>
+                    <Ionicons
+                      name="arrow-forward"
+                      color={COLORS.foreground}
+                      size={19}
+                    />
+                  </Pressable>
+                </View>
+              </View>
+            )}
+          </>
+        )}
+      </ScrollView>
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  safeArea: { backgroundColor: COLORS.background, flex: 1 },
+  scrollContent: { paddingBottom: 54 },
+  homeContent: { gap: 42, paddingTop: 36 },
+  inlineError: {
+    alignItems: "center",
+    backgroundColor: "#f9ddd9",
+    borderColor: COLORS.foreground,
+    borderRadius: 15,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 9,
+    marginHorizontal: 20,
+    marginTop: 14,
+    padding: 12,
+  },
+  inlineErrorText: {
+    color: COLORS.foreground,
+    flex: 1,
+    fontFamily: "normal-font",
+    fontSize: 14,
+    lineHeight: 19,
+  },
+  locationEmpty: {
+    alignItems: "flex-start",
+    backgroundColor: COLORS.yellow,
+    borderColor: COLORS.foreground,
+    borderRadius: 28,
+    borderWidth: 1,
+    gap: 12,
+    marginHorizontal: 20,
+    marginTop: 34,
+    padding: 24,
+  },
+  emptyMark: {
+    alignItems: "center",
+    backgroundColor: COLORS.background,
+    borderColor: COLORS.foreground,
+    borderRadius: 99,
+    borderWidth: 1,
+    height: 58,
+    justifyContent: "center",
+    width: 58,
+  },
+  emptyTitle: {
+    color: COLORS.foreground,
+    fontFamily: "spec-font",
+    fontSize: 37,
+    lineHeight: 38,
+    paddingTop: 10,
+  },
+  emptyBody: {
+    color: "#5f5751",
+    fontFamily: "normal-font",
+    fontSize: 16,
+    lineHeight: 22,
+  },
+  primaryAction: {
+    alignItems: "center",
+    alignSelf: "stretch",
+    backgroundColor: COLORS.foreground,
+    borderRadius: 99,
+    marginTop: 4,
+    minHeight: 52,
+    justifyContent: "center",
+    paddingHorizontal: 18,
+  },
+  primaryActionText: {
+    color: COLORS.background,
+    fontFamily: "normal-bold",
+    fontSize: 16,
+  },
+  secondaryAction: {
+    alignItems: "center",
+    alignSelf: "stretch",
+    minHeight: 40,
+    justifyContent: "center",
+  },
+  secondaryActionText: {
+    color: COLORS.foreground,
+    fontFamily: "normal-bold",
+    fontSize: 15,
+    textDecorationLine: "underline",
+  },
+  exploreMore: {
+    backgroundColor: COLORS.blue,
+    borderColor: COLORS.foreground,
+    borderRadius: 28,
+    borderWidth: 1,
+    gap: 10,
+    marginHorizontal: 20,
+    overflow: "hidden",
+    padding: 24,
+  },
+  exploreEyebrow: {
+    color: COLORS.foreground,
+    fontFamily: "normal-bold",
+    fontSize: 12,
+    letterSpacing: 1.4,
+  },
+  exploreTitle: {
+    color: COLORS.foreground,
+    fontFamily: "spec-font",
+    fontSize: 39,
+    lineHeight: 40,
+  },
+  exploreBody: {
+    color: "#2c3138",
+    fontFamily: "normal-font",
+    fontSize: 16,
+    lineHeight: 22,
+  },
+  exploreButton: {
+    alignItems: "center",
+    alignSelf: "stretch",
+    backgroundColor: COLORS.background,
+    borderColor: COLORS.foreground,
+    borderRadius: 99,
+    borderWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 8,
+    minHeight: 52,
+    paddingHorizontal: 18,
+  },
+  exploreButtonText: {
+    color: COLORS.foreground,
+    fontFamily: "normal-bold",
+    fontSize: 16,
+  },
+  pressed: { opacity: 0.74 },
+});

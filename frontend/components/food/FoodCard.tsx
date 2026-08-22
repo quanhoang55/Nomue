@@ -1,6 +1,10 @@
 import { COLORS } from "@/constants/colors";
+import {
+  useDishTypeImage,
+  useDishTypeName,
+} from "@/hooks/useDishTypeImage";
 import { router } from "expo-router";
-import { Image, Pressable, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 
 // ===========================================================
 // Food Card Accent Colors
@@ -13,10 +17,10 @@ const FOOD_CARD_COLORS = Object.entries(COLORS)
 // Type
 // ===========================================================
 export type FoodCardType = {
+  dishTypeId: string | null;
   id: string;
   name: string;
   image?: string | null;
-  price: string;
   description: string | null;
 };
 
@@ -49,25 +53,35 @@ function getFoodCardColor(id: string) {
 // Main
 // ===========================================================
 export function FoodCard({ item }: { item: FoodCardType }) {
+  const dishTypeImage = useDishTypeImage(item.dishTypeId);
+  const dishTypeName = useDishTypeName(item.dishTypeId);
+
   return (
     <View
-      className="w-full max-h-150 min-h-80 h-100 card-normal"
+      className="w-full max-h-150 min-h-80 h-100 card-normal overflow-hidden"
       style={{ backgroundColor: getFoodCardColor(item.id) }}
     >
-      {item.image ? (
+      {dishTypeImage ? (
+        <Image
+          accessible={false}
+          resizeMode="contain"
+          source={dishTypeImage}
+          style={styles.sticker}
+        />
+      ) : item.image ? (
         <Image
           source={{ uri: item.image }}
-          className="w-full h-40 card-normal bg-white"
+          resizeMode="contain"
+          style={styles.sticker}
         />
-      ) : (
-        <View className="w-full h-[40%] card-normal bg-white items-center justify-center">
-          <Text className="text-box">Image coming soon</Text>
-        </View>
-      )}
-      <View className="h-[15%]">
+      ) : null}
+      <View className="h-[20%]">
         <Text className="card-name">{item.name}</Text>
+        <Text className="font-sans-bold text-xs uppercase tracking-wider text-foreground">
+          {dishTypeName ?? "Local dish"}
+        </Text>
       </View>
-      <View className="h-[35%]">
+      <View className="h-[65%] pt-2">
         <Text className="card-des">{item.description}</Text>
       </View>
 
@@ -82,3 +96,14 @@ export function FoodCard({ item }: { item: FoodCardType }) {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  sticker: {
+    height: 270,
+    position: "absolute",
+    right: -60,
+    top: 180,
+    transform: [{ rotate: "20deg" }],
+    width: 270,
+  },
+});

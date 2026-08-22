@@ -19,14 +19,18 @@ from app.core.security import (
 )
 from app.repositories.dish_province_repository import DishProvinceRepository
 from app.repositories.dish_repository import DishRepository
+from app.repositories.dish_type_repository import DishTypeRepository
 from app.repositories.local_area_repository import LocalAreaRepository
+from app.repositories.preference_repository import PreferenceRepository
 from app.repositories.province_repository import ProvinceRepository
 from app.repositories.restaurant_dish_repository import RestaurantDishRepository
 from app.repositories.user_repository import UserRepository
 from app.services.auth_service import AuthService
 from app.services.chat_service import ChatService
 from app.services.dish_service import DishService
+from app.services.dish_type_service import DishTypeService
 from app.services.location_service import LocationService
+from app.services.preference_service import PreferenceService
 from app.services.restaurant_discovery_service import RestaurantDiscoveryService
 from app.services.restaurant_service import RestaurantService
 
@@ -62,6 +66,11 @@ async def get_dish_service() -> DishService:
     )
 
 
+async def get_dish_type_service() -> DishTypeService:
+    db = await get_supabase()
+    return DishTypeService(dish_type_repo=DishTypeRepository(db))
+
+
 async def get_location_service() -> LocationService:
     db = await get_supabase()
     return LocationService(
@@ -69,6 +78,11 @@ async def get_location_service() -> LocationService:
         province_repo=ProvinceRepository(db),
         max_match_distance_km=settings.location_max_match_distance_km,
     )
+
+
+async def get_preference_service() -> PreferenceService:
+    db = await get_supabase()
+    return PreferenceService(preference_repo=PreferenceRepository(db))
 
 
 # ==========================================================================

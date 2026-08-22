@@ -22,6 +22,14 @@ export default function TabsLayout() {
         <NativeTabs.Trigger.Label>{""}</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
 
+      <NativeTabs.Trigger name="map">
+        <NativeTabs.Trigger.Icon
+          sf={{ default: "map", selected: "map.fill" }}
+          drawable="custom_map_drawable"
+        />
+        <NativeTabs.Trigger.Label>{""}</NativeTabs.Trigger.Label>
+      </NativeTabs.Trigger>
+
       <NativeTabs.Trigger name="chat">
         <NativeTabs.Trigger.Icon
           sf={{ default: "message", selected: "message.fill" }}

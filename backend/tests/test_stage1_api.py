@@ -10,11 +10,13 @@ from app.schemas.dish import DishResponse
 
 DISH_ID = UUID("11111111-1111-4111-8111-111111111111")
 PROVINCE_ID = UUID("33333333-3333-4333-8333-333333333333")
+DISH_TYPE_ID = UUID("55555555-5555-4555-8555-555555555555")
 
 
 def make_dish() -> DishResponse:
     return DishResponse(
         id=DISH_ID,
+        dish_type_id=DISH_TYPE_ID,
         name="Phở",
         description="Noodle soup",
         spice_level=1,
@@ -66,6 +68,7 @@ class DishApiTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()[0]["id"], str(DISH_ID))
+        self.assertEqual(response.json()[0]["dish_type_id"], str(DISH_TYPE_ID))
 
     def test_valid_province_with_no_dishes_returns_empty_array(self) -> None:
         self.service.province_result = []
@@ -102,6 +105,7 @@ class DishApiTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["name"], "Phở")
+        self.assertEqual(response.json()["dish_type_id"], str(DISH_TYPE_ID))
 
     def test_get_dish_ids_by_province(self) -> None:
         response = self.client.get(f"/api/v1/locations/{PROVINCE_ID}/dish-ids")

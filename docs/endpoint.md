@@ -13,6 +13,7 @@ Returns one dish by UUID.
 ```json
 {
   "id": "uuid",
+  "dish_type_id": "uuid-or-null",
   "name": "Phở",
   "description": "Noodle soup",
   "spice_level": 1,
@@ -34,6 +35,7 @@ Returns up to 100 dishes for a valid province. Results are ordered by the `dish_
 [
   {
     "id": "uuid",
+    "dish_type_id": "uuid-or-null",
     "name": "Bánh chưng",
     "description": "Square sticky-rice cake",
     "spice_level": 0,
@@ -55,6 +57,51 @@ Application errors use:
 ```
 
 Invalid UUID parameters return FastAPI's standard `422` validation response.
+
+## Dish Types
+
+### `GET /dish-types/{dish_type_id}`
+
+Returns the name of one dish type by UUID.
+
+```json
+{
+  "name": "Soup"
+}
+```
+
+An unknown dish type returns `404`. An invalid UUID returns FastAPI's standard `422` validation response.
+
+## Preferences
+
+Preference endpoints require a valid Supabase bearer token. The backend derives
+the owner from the verified token; clients must not send a `user_id` query or
+body field.
+
+### `GET /preferences/me`
+
+Returns all preference fields for the authenticated user. If the user does not
+have a `user_preference` row yet, the endpoint returns `404`.
+
+### `PATCH /preferences/me`
+
+Updates only the supplied preference fields for the authenticated user and
+returns the complete updated preference record.
+
+```json
+{
+  "spice_preference": 4,
+  "no_pork": true
+}
+```
+
+Flavour levels must be between `0` and `5`. `allergy_preference` may be cleared
+with `null`; non-nullable fields reject `null`. Empty updates and unknown
+request fields, including `user_id`, return `422`.
+
+`max_price` is not deployed in the current Supabase table. GET responses expose
+it as `null` for forward compatibility, while PATCH requests containing it are
+rejected until the column is added.
 
 ## Locations
 
@@ -191,6 +238,7 @@ Response shape:
     {
       "dish": {
         "id": "11111111-1111-4111-8111-111111111111",
+        "dish_type_id": null,
         "name": "Phở",
         "description": "Vietnamese noodle soup",
         "spice_level": 1,

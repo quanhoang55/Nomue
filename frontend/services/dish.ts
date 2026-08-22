@@ -5,6 +5,7 @@ import { apiFetch } from "@/lib/api";
 // ============================================================
 export type Dish = {
   id: string;
+  dish_type_id: string | null;
   name: string;
   description: string | null;
   spice_level: number;
@@ -13,6 +14,12 @@ export type Dish = {
   bitterness_level: number;
   adventurous_level: number;
   typical_price: number;
+  importance_score?: number;
+  important_score?: number;
+};
+
+export type DishType = {
+  name: string;
 };
 
 // ============================================================
@@ -21,6 +28,10 @@ export type Dish = {
 
 export function getDish(dishId: string): Promise<Dish> {
   return apiFetch<Dish>(`/dishes/${dishId}`, { auth: "none" });
+}
+
+export function getDishType(dishTypeId: string): Promise<DishType> {
+  return apiFetch<DishType>(`/dish-types/${dishTypeId}`, { auth: "none" });
 }
 
 export function getDishes(provinceId: string): Promise<Dish[]> {

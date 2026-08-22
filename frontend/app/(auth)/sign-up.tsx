@@ -44,6 +44,8 @@ export default function SignUpScreen() {
           pathname: "/(auth)/verify-email",
           params: { email: email.trim().toLowerCase() },
         });
+      } else {
+        router.replace("/(auth)/question");
       }
     } catch (signUpError) {
       setError(getAuthErrorMessage(signUpError));
@@ -57,6 +59,7 @@ export default function SignUpScreen() {
     setPending("google");
     try {
       await signInGoogle();
+      router.replace("/(auth)/question");
     } catch (googleError) {
       setError(getAuthErrorMessage(googleError));
     } finally {

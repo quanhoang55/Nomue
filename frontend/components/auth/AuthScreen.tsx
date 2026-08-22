@@ -128,7 +128,13 @@ export function AuthMessage({
   );
 }
 
-export function AuthLink({ label, onPress }: { label: string; onPress: () => void }) {
+export function AuthLink({
+  label,
+  onPress,
+}: {
+  label: string;
+  onPress: () => void;
+}) {
   return (
     <Pressable accessibilityRole="button" onPress={onPress} hitSlop={8}>
       <Text style={styles.link}>{label}</Text>
@@ -171,7 +177,7 @@ const styles = StyleSheet.create({
   },
   brand: {
     color: COLORS.foreground,
-    fontFamily: "spec-36",
+    fontFamily: "spec-font",
     fontSize: 58,
     letterSpacing: 1,
     marginBottom: 26,
@@ -179,7 +185,7 @@ const styles = StyleSheet.create({
   headingBlock: { gap: 8, marginBottom: 26 },
   title: {
     color: COLORS.foreground,
-    fontFamily: "spec-36",
+    fontFamily: "spec-font",
     fontSize: 42,
     lineHeight: 44,
   },

@@ -5,20 +5,21 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { AuthProvider, useAuth } from "@/providers/AuthProvider";
 import { LocationProvider } from "@/providers/LocationProvider";
+import { ChatMapProvider } from "@/providers/ChatMapProvider";
 import { COLORS } from "@/constants/colors";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 SplashScreen.preventAutoHideAsync();
 
 function RootNavigator() {
-  const {
-    continueWithoutAccount,
-    error,
-    isLogIn,
-    isPasswordRecovery,
-    retryProfileBootstrap,
-    status,
-  } = useAuth();
+  const { continueWithoutAccount, error, retryProfileBootstrap, status } =
+    useAuth();
 
   if (status === "initializing") {
     return (
@@ -39,7 +40,10 @@ function RootNavigator() {
         >
           <Text style={styles.primaryButtonText}>Try again</Text>
         </Pressable>
-        <Pressable onPress={continueWithoutAccount} style={styles.secondaryButton}>
+        <Pressable
+          onPress={continueWithoutAccount}
+          style={styles.secondaryButton}
+        >
           <Text style={styles.secondaryButtonText}>Continue browsing</Text>
         </Pressable>
       </View>
@@ -50,9 +54,7 @@ function RootNavigator() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="locations/[dishId]" />
-      <Stack.Protected guard={!isLogIn || isPasswordRecovery}>
-        <Stack.Screen name="(auth)" />
-      </Stack.Protected>
+      <Stack.Screen name="(auth)" />
     </Stack>
   );
 }
@@ -67,7 +69,7 @@ const styles = StyleSheet.create({
   },
   errorTitle: {
     color: COLORS.foreground,
-    fontFamily: "spec-36",
+    fontFamily: "spec-font",
     fontSize: 36,
     marginBottom: 10,
     textAlign: "center",
@@ -107,13 +109,17 @@ export default function RootLayout() {
   // Font
   // ===========================================================
   const [fontsLoaded] = useFonts({
-    "normal-font": require("../assets/fonts/josefin/JosefinSans-Regular.ttf"),
-    "normal-italic": require("../assets/fonts/josefin/JosefinSans-Italic.ttf"),
-    "normal-bold": require("../assets/fonts/josefin/JosefinSans-SemiBold.ttf"),
-    "normal-bold-italic": require("../assets/fonts/josefin/JosefinSans-SemiBoldItalic.ttf"),
-    "spec-font": require("../assets/fonts/bigshoulder/BigShoulders-Black.ttf"),
-    "spec-36": require("../assets/fonts/bigshoulder/BigShoulders_36pt-Black.ttf"),
-    "spec-60": require("../assets/fonts/bigshoulder/BigShoulders_60pt-Black.ttf"),
+    // "normal-font": require("../assets/fonts/josefin/JosefinSans-Regular.ttf"),
+    // "normal-italic": require("../assets/fonts/josefin/JosefinSans-Italic.ttf"),
+    // "normal-bold": require("../assets/fonts/josefin/JosefinSans-SemiBold.ttf"),
+    // "normal-bold-italic": require("../assets/fonts/josefin/JosefinSans-SemiBoldItalic.ttf"),
+    // "spec-font": require("../assets/fonts/bigshoulder/BigShoulders-Black.ttf"),
+    // "spec-36": require("../assets/fonts/bigshoulder/BigShoulders_36pt-Black.ttf"),
+    // "spec-60": require("../assets/fonts/bigshoulder/BigShoulders_60pt-Black.ttf"),
+    "normal-font": require("../assets/fonts/lexend/Lexend-Regular.ttf"),
+    "normal-bold": require("../assets/fonts/lexend/Lexend-Bold.ttf"),
+    "normal-black": require("../assets/fonts/lexend/Lexend-Black.ttf"),
+    "spec-font": require("../assets/fonts/sigmar/Sigmar-Regular.ttf"),
   });
 
   useEffect(() => {
@@ -130,7 +136,9 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <LocationProvider>
-        <RootNavigator />
+        <ChatMapProvider>
+          <RootNavigator />
+        </ChatMapProvider>
       </LocationProvider>
     </AuthProvider>
   );

@@ -14,6 +14,7 @@ from app.schemas.common import RequestModel, ResponseModel
 
 
 class DishFields(RequestModel):
+    dish_type_id: UUID | None = None
     name: str = Field(min_length=1)
     description: str | None = None
     spice_level: int = Field(ge=0, le=5)
@@ -39,6 +40,7 @@ class DishCreate(DishFields):
 
 
 class DishUpdate(RequestModel):
+    dish_type_id: UUID | None = None
     name: str | None = Field(default=None, min_length=1)
     description: str | None = None
     spice_level: int | None = Field(default=None, ge=0, le=5)
@@ -56,6 +58,7 @@ class DishUpdate(RequestModel):
 
 class DishResponse(ResponseModel):
     id: UUID
+    dish_type_id: UUID | None = None
     name: str
     description: str | None = None
     spice_level: int = Field(ge=0, le=5)

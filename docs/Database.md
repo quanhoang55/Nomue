@@ -23,6 +23,7 @@ Use:
 
 ```text
 dish
+dish_type
 province
 local_area
 dish_province
@@ -143,6 +144,7 @@ Stores the canonical information for a Vietnamese dish.
 | Column              | Role     | Description                                                                                       |
 | ------------------- | -------- | ------------------------------------------------------------------------------------------------- |
 | `id`                | PK       | Unique UUID identifying the dish.                                                                 |
+| `dish_type_id`      | FK → `dish_type.id`, nullable | Optional category assigned to the dish. A null value means the dish has not been categorized yet. |
 | `name`              | Data     | Display name of the dish.                                                                         |
 | `description`       | Data     | Human-readable description of the dish. May be nullable if data is incomplete.                    |
 | `spice_level`       | Data     | Relative spice score, normally `0-5`.                                                             |
@@ -157,6 +159,8 @@ Stores the canonical information for a Vietnamese dish.
 ### Important notes
 
 `id` is the canonical identity of the dish and should be used by other tables instead of repeating the dish name.
+
+`dish_type_id` is nullable so the new taxonomy can be introduced without requiring every existing dish to be categorized immediately. When present, it must reference an existing `dish_type.id`.
 
 Example:
 
@@ -189,6 +193,41 @@ Field(ge=0, le=5)
 Pydantic validation protects the API from invalid database data, while a PostgreSQL constraint prevents invalid values from being stored in the first place.
 
 `created_at` and `updated_at` do not have to be exposed by `DishResponse` unless the frontend actually needs them.
+
+---
+
+## `dish_type`
+
+Stores the canonical dish categories used to classify dishes. Examples may include noodle dishes, soups, rice dishes, breads, desserts, and drinks.
+
+| Column | Role | Description                                      |
+| ------ | ---- | ------------------------------------------------ |
+| `id`   | PK   | Unique UUID identifying the dish type.           |
+| `name` | Data | Human-readable, unique name of the dish category. |
+
+Relationship:
+
+```text
+dish_type
+   1
+   │
+   └──── many dish
+```
+
+A dish may have zero or one dish type:
+
+```text
+dish.dish_type_id → dish_type.id
+```
+
+Recommended constraints and indexes:
+
+```text
+dish_type.name UNIQUE
+INDEX dish(dish_type_id)
+```
+
+Create and populate `dish_type` before assigning `dish.dish_type_id`. Because the foreign key is nullable, existing dish records remain valid until they are categorized.
 
 ---
 
@@ -417,7 +456,7 @@ Stores food preferences for one user.
 | `sweetness_preference`   | Data                   | Preferred sweetness level.                                        |
 | `sourness_preference`    | Data                   | Preferred sourness level.                                         |
 | `adventurous_preference` | Data                   | Preference for adventurous/unfamiliar dishes.                     |
-| `max_price`              | Data                   | Optional user price ceiling.                                      |
+| `max_price`              | Planned, nullable      | Optional user price ceiling. Not deployed in the current Supabase table yet. |
 | `vegetarian`             | Data                   | Vegetarian preference/restriction.                                |
 | `vegan`                  | Data                   | Vegan preference/restriction.                                     |
 | `no_pork`                | Data                   | Avoid pork.                                                       |
@@ -437,6 +476,13 @@ one user_preference row
 ```
 
 rather than multiple active preference rows for the same user.
+
+Self-service preference endpoints must derive `user_id` from the verified
+Supabase JWT. They must not trust a user ID supplied in a query parameter or
+request body. The backend uses a privileged Supabase secret key that bypasses
+Row Level Security, so the repository's authenticated-user filter is mandatory.
+RLS should still enforce the same ownership rule for any direct access made
+with publishable/authenticated client credentials.
 
 ---
 
@@ -693,6 +739,8 @@ dish.sourness_level        BETWEEN 0 AND 5
 dish.bitterness_level      BETWEEN 0 AND 5
 dish.adventurous_level     BETWEEN 0 AND 5
 dish.typical_price         >= 0
+dish.dish_type_id          REFERENCES dish_type(id)
+dish_type.name             UNIQUE
 dish_province              UNIQUE (dish_id, province_id)
 user_preference.user_id    UNIQUE
 ```
@@ -701,6 +749,7 @@ Foreign-key indexes should also be considered for columns frequently used for jo
 
 ```text
 local_area.province_id
+dish.dish_type_id
 dish_province.province_id
 dish_province.dish_id
 restaurant_dish.dish_id

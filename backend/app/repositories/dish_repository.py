@@ -22,7 +22,7 @@ from app.schemas.dish import DishResponse
 logger = logging.getLogger(__name__)
 
 DISH_SELECT_COLUMNS = (
-    "id,name,description,spice_level,sweetness_level,sourness_level,"
+    "id,dish_type_id,name,description,spice_level,sweetness_level,sourness_level,"
     "bitterness_level,adventurous_level,typical_price"
 )
 

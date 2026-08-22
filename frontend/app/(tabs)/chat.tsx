@@ -8,6 +8,7 @@ import {
 import { COLORS } from "@/constants/colors";
 import { useAuth } from "@/providers/AuthProvider";
 import { useLocationSelection } from "@/providers/LocationProvider";
+import { useChatMap } from "@/providers/ChatMapProvider";
 import {
   createChatResponse,
   type ChatLocationRequest,
@@ -113,12 +114,6 @@ const QUICK_PROMPTS = [
   "Recommend a local breakfast",
 ];
 
-const vndFormatter = new Intl.NumberFormat("vi-VN", {
-  style: "currency",
-  currency: "VND",
-  maximumFractionDigits: 0,
-});
-
 // ==========================================================================
 // Function: Convert an API Response to a Conversation Item
 // ==========================================================================
@@ -158,9 +153,9 @@ function createRecommendationItem(
     summary: response.summary,
     paragraph: response.paragraph,
     foods: response.recommended_dishes.map(({ dish, reason }) => ({
+      dishTypeId: dish.dish_type_id,
       id: dish.id,
       name: dish.name,
-      price: vndFormatter.format(dish.typical_price),
       description: dish.description
         ? `${dish.description}\n\nWhy this fits: ${reason}`
         : reason,
@@ -477,6 +472,7 @@ function ChatComposer({
 // ==========================================================================
 function AuthenticatedChatPage() {
   const { selectedLocation } = useLocationSelection();
+  const { publishChatResults } = useChatMap();
   const [conversation, setConversation] =
     useState<ChatItem[]>(INITIAL_CONVERSATION);
   const [draft, setDraft] = useState("");
@@ -577,6 +573,7 @@ function AuthenticatedChatPage() {
         }
 
         const response = await createChatResponse(request);
+        publishChatResults(response.recommended_restaurants, response.location);
         if (__DEV__) {
           console.log("CHAT RESPONSE:", {
             recommendedDishesLength: response.recommended_dishes.length,
@@ -613,7 +610,7 @@ function AuthenticatedChatPage() {
         setIsSending(false);
       }
     },
-    [draft, prepareChatLocation],
+    [draft, prepareChatLocation, publishChatResults],
   );
 
   // ========================================================================

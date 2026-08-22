@@ -10,11 +10,13 @@ from app.repositories.province_repository import ProvinceRepository
 DISH_ID_1 = UUID("11111111-1111-4111-8111-111111111111")
 DISH_ID_2 = UUID("22222222-2222-4222-8222-222222222222")
 PROVINCE_ID = UUID("33333333-3333-4333-8333-333333333333")
+DISH_TYPE_ID = UUID("55555555-5555-4555-8555-555555555555")
 
 
 def dish_row(dish_id: UUID, name: str) -> dict[str, object]:
     return {
         "id": str(dish_id),
+        "dish_type_id": str(DISH_TYPE_ID),
         "name": name,
         "description": None,
         "spice_level": 1,
@@ -51,7 +53,12 @@ class DishRepositoryTests(IsolatedAsyncioTestCase):
         dishes = await repository.get_by_ids([DISH_ID_1, DISH_ID_2])
 
         self.assertEqual([dish.id for dish in dishes], [DISH_ID_2, DISH_ID_1])
+        self.assertTrue(all(dish.dish_type_id == DISH_TYPE_ID for dish in dishes))
         db.table.assert_called_once_with("dish")
+        query.select.assert_called_once_with(
+            "id,dish_type_id,name,description,spice_level,sweetness_level,"
+            "sourness_level,bitterness_level,adventurous_level,typical_price"
+        )
         query.in_.assert_called_once_with("id", [str(DISH_ID_1), str(DISH_ID_2)])
         query.limit.assert_called_once_with(2)
 

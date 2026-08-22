@@ -31,6 +31,7 @@ export default function SignInScreen() {
         }
         await signIn(email, password);
       }
+      router.replace("/(tabs)");
     } catch (signInError) {
       setError(getAuthErrorMessage(signInError));
     } finally {

@@ -34,6 +34,8 @@ export interface DishLocation {
   longitude: number;
   name?: string;
   description?: string | null;
+  rating?: number | null;
+  google_maps_uri?: string | null;
 }
 
 export interface MapScreenProps {
@@ -68,8 +70,12 @@ function createRegion(latitude: number, longitude: number): Region {
 // ===========================================================
 export function MapScreen({
   location_info,
+  variant = "card",
+  contentInsets = { top: 0, bottom: 0 },
 }: {
   location_info: MapScreenProps;
+  variant?: "card" | "full";
+  contentInsets?: { top: number; bottom: number };
 }) {
   // ===========================================================
   // State
@@ -109,14 +115,27 @@ export function MapScreen({
       if (coordinates.length > 1) {
         mapRef.current?.fitToCoordinates(coordinates, {
           animated,
-          edgePadding: { top: 70, right: 50, bottom: 70, left: 50 },
+          edgePadding: {
+            top: 70 + contentInsets.top,
+            right: 50,
+            bottom: 70 + contentInsets.bottom,
+            left: 50,
+          },
         });
         return;
       }
 
       mapRef.current?.animateToRegion(region, animated ? 450 : 0);
     },
-    [dishLocations, hasUserLocation, latitude, longitude, region],
+    [
+      contentInsets.bottom,
+      contentInsets.top,
+      dishLocations,
+      hasUserLocation,
+      latitude,
+      longitude,
+      region,
+    ],
   );
 
   useEffect(() => {
@@ -130,7 +149,9 @@ export function MapScreen({
   }, []);
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[styles.container, variant === "full" && styles.fullContainer]}
+    >
       <MapView
         ref={mapRef}
         style={StyleSheet.absoluteFill}
@@ -188,7 +209,7 @@ export function MapScreen({
 
         {dishLocations.map((dishLocation, index) => (
           <Marker
-            key={`${dishLocation.latitude}-${dishLocation.longitude}-${index}`}
+            key={`${dishLocation.name ?? "place"}-${dishLocation.latitude}-${dishLocation.longitude}-${index}`}
             coordinate={dishLocation}
             anchor={{ x: 0.5, y: 0.9 }}
             tracksViewChanges={false}
@@ -207,16 +228,34 @@ export function MapScreen({
               <View style={[styles.markerPoint, styles.dishMarkerPoint]} />
             </View>
 
-            <Callout tooltip>
+            <Callout
+              onPress={() => {
+                if (dishLocation.google_maps_uri) {
+                  void Linking.openURL(dishLocation.google_maps_uri);
+                }
+              }}
+              tooltip
+            >
               <View style={styles.calloutWrapper}>
                 <View style={styles.callout}>
-                  <Text style={styles.calloutTitle}>
-                    {dishLocation.name ?? "Dish location"}
-                  </Text>
+                  <View style={styles.calloutHeading}>
+                    <Text style={styles.calloutTitle}>
+                      {dishLocation.name ?? "Dish location"}
+                    </Text>
+                    {dishLocation.rating !== null &&
+                    dishLocation.rating !== undefined ? (
+                      <Text style={styles.calloutRating}>
+                        ★ {dishLocation.rating.toFixed(1)}
+                      </Text>
+                    ) : null}
+                  </View>
                   <Text style={styles.calloutCoordinates}>
                     {dishLocation.description ??
                       `${dishLocation.latitude.toFixed(5)}, ${dishLocation.longitude.toFixed(5)}`}
                   </Text>
+                  {dishLocation.google_maps_uri ? (
+                    <Text style={styles.calloutLink}>Open in Maps →</Text>
+                  ) : null}
                 </View>
                 <View style={styles.calloutArrow} />
               </View>
@@ -231,6 +270,9 @@ export function MapScreen({
         onPress={openAttribution}
         style={({ pressed }) => [
           styles.attribution,
+          variant === "full" && {
+            top: contentInsets.top + 8,
+          },
           pressed && styles.attributionPressed,
         ]}
       >
@@ -255,6 +297,10 @@ const styles = StyleSheet.create({
     borderColor: COLORS.foreground,
     borderRadius: 20,
     backgroundColor: COLORS.background,
+  },
+  fullContainer: {
+    borderRadius: 0,
+    borderWidth: 0,
   },
   // centerButton: {
   //   position: "absolute",
@@ -332,15 +378,32 @@ const styles = StyleSheet.create({
     letterSpacing: 1.2,
   },
   calloutTitle: {
-    marginBottom: 7,
     color: "#FAF8EF",
+    flex: 1,
     fontSize: 16,
+    fontWeight: "800",
+  },
+  calloutHeading: {
+    alignItems: "flex-start",
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 7,
+  },
+  calloutRating: {
+    color: COLORS.yellow,
+    fontSize: 12,
     fontWeight: "800",
   },
   calloutCoordinates: {
     color: "#BBC4BA",
     fontSize: 12,
     fontWeight: "600",
+  },
+  calloutLink: {
+    color: COLORS.yellow,
+    fontSize: 12,
+    fontWeight: "800",
+    marginTop: 10,
   },
   calloutArrow: {
     width: 0,
